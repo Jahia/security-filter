@@ -47,7 +47,7 @@ import org.apache.commons.lang.StringUtils;
 import org.jahia.modules.securityfilter.PermissionService;
 import org.jahia.services.content.JCRNodeWrapper;
 import org.osgi.service.cm.ConfigurationException;
-import org.osgi.service.cm.ManagedService;
+import org.osgi.service.cm.ManagedServiceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,7 +61,7 @@ import java.util.regex.Pattern;
  * <p>
  * Bound to org.jahia.modules.api.permissions.cfg
  */
-public class PermissionsConfig implements PermissionService, ManagedService {
+public class PermissionsConfig implements PermissionService, ManagedServiceFactory {
     private static final Logger logger = LoggerFactory.getLogger(PermissionsConfig.class);
     private final static PermissionsConfig INSTANCE = new PermissionsConfig();
 
@@ -70,6 +70,13 @@ public class PermissionsConfig implements PermissionService, ManagedService {
 
     private List<Permission> permissions = new ArrayList<Permission>();
 
+    private Map<String, List<Permission>> permissionsByPid = new HashMap<String, List<Permission>>();
+
+    @Override
+    public String getName() {
+        return "API Security configuration";
+    }
+
     /**
      * Configuration change - load all permissions from cfg
      *
@@ -77,7 +84,7 @@ public class PermissionsConfig implements PermissionService, ManagedService {
      * @throws ConfigurationException
      */
     @Override
-    public void updated(Dictionary<String, ?> properties) throws ConfigurationException {
+    public void updated(String pid, Dictionary<String, ?> properties) throws ConfigurationException {
         List<Permission> newPermissions = new ArrayList<Permission>();
         if (properties != null) {
             Enumeration<String> keys = properties.keys();
@@ -96,12 +103,23 @@ public class PermissionsConfig implements PermissionService, ManagedService {
             for (Map<String, String> map : permissionConfig.values()) {
                 Permission permission = new Permission();
                 permission.setRequiredPermission(map.get("requiredPermission"));
-                permission.setNodeType(map.get("nodeType"));
-                permission.setApi(map.get("api"));
-                if (map.containsKey("pathPattern")) {
-                    permission.setPathPattern(Pattern.compile(map.get("pathPattern")));
+
+                if (map.containsKey("nodeType")) {
+                    permission.setNodeTypes(new HashSet<String>(Arrays.asList(StringUtils.split(map.get("nodeType"), ", "))));
                 }
-                permission.setWorkspace(map.get("workspace"));
+                if (map.containsKey("api")) {
+                    permission.setApis(new HashSet<String>(Arrays.asList(StringUtils.split(map.get("api"), ", "))));
+                }
+                if (map.containsKey("pathPattern")) {
+                    Set<Pattern> patterns = new HashSet<Pattern>();
+                    for (String exp : StringUtils.split(map.get("pathPattern"), ", ")) {
+                        patterns.add(Pattern.compile(exp));
+                    }
+                    permission.setPathPatterns(patterns);
+                }
+                if (map.containsKey("workspace")) {
+                    permission.setWorkspaces(new HashSet<String>(Arrays.asList(StringUtils.split(map.get("workspace"), ", "))));
+                }
                 if (map.containsKey("priority")) {
                     permission.setPriority(Integer.parseInt(map.get("priority")));
                 }
@@ -112,6 +130,24 @@ public class PermissionsConfig implements PermissionService, ManagedService {
                 }
             }
         }
+
+        permissionsByPid.put(pid, newPermissions);
+
+        updatePermissions();
+    }
+
+    @Override
+    public void deleted(String pid) {
+        permissionsByPid.remove(pid);
+
+        updatePermissions();
+    }
+
+    public void updatePermissions() {
+        List<Permission> newPermissions = new ArrayList<Permission>();
+        for (List<Permission> permissionList : permissionsByPid.values()) {
+            newPermissions.addAll(permissionList);
+        }
         Collections.sort(newPermissions, new Comparator<Permission>() {
             @Override
             public int compare(Permission o1, Permission o2) {
@@ -121,21 +157,30 @@ public class PermissionsConfig implements PermissionService, ManagedService {
         permissions = newPermissions;
     }
 
-    public boolean hasPermission(String api, Node node) throws RepositoryException {
-        logger.debug("Checking api permission " + api + " for " + node.getPath());
+    public boolean hasPermission(String apiToCheck, Node node) throws RepositoryException {
+        logger.debug("Checking api permission " + apiToCheck + " for " + node.getPath());
         for (Permission permission : permissions) {
             boolean check = true;
-            if (permission.getWorkspace() != null) {
-                check = permission.getWorkspace().contains(node.getSession().getWorkspace().getName());
+            if (permission.getWorkspaces() != null && !permission.getWorkspaces().isEmpty()) {
+                check = permission.getWorkspaces().contains(node.getSession().getWorkspace().getName());
             }
-            if (check && permission.getApi() != null) {
-                check = permission.getApi().equals(api) || api.startsWith(permission.getApi() + ".");
+            if (check && permission.getApis() != null && !permission.getApis().isEmpty()) {
+                check = false;
+                for (String api : permission.getApis()) {
+                    check |= api.equals(apiToCheck) || apiToCheck.startsWith(api + ".");
+                }
             }
-            if (check && permission.getNodeType() != null) {
-                check = node.isNodeType(permission.getNodeType());
+            if (check && permission.getNodeTypes() != null && !permission.getNodeTypes().isEmpty()) {
+                check = false;
+                for (String nodeType : permission.getNodeTypes()) {
+                    check |= node.isNodeType(nodeType);
+                }
             }
-            if (check && permission.getPathPattern() != null) {
-                check = permission.getPathPattern().matcher(node.getPath()).matches();
+            if (check && permission.getPathPatterns() != null && !permission.getPathPatterns().isEmpty()) {
+                check = false;
+                for (Pattern pattern : permission.getPathPatterns()) {
+                    check |= pattern.matcher(node.getPath()).matches();
+                }
             }
             if (check) {
                 return ((JCRNodeWrapper) node).hasPermission(permission.getRequiredPermission());

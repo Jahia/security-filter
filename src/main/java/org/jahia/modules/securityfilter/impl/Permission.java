@@ -43,6 +43,7 @@
  */
 package org.jahia.modules.securityfilter.impl;
 
+import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
@@ -52,10 +53,10 @@ import java.util.regex.Pattern;
  */
 public class Permission {
     private String requiredPermission;
-    private String api;
-    private String workspace;
-    private Pattern pathPattern;
-    private String nodeType;
+    private Set<String> apis;
+    private Set<String> workspaces;
+    private Set<Pattern> pathPatterns;
+    private Set<String> nodeTypes;
     private int priority = 0;
 
     public String getRequiredPermission() {
@@ -66,36 +67,36 @@ public class Permission {
         this.requiredPermission = requiredPermission;
     }
 
-    public String getApi() {
-        return api;
+    public Set<String> getApis() {
+        return apis;
     }
 
-    public void setApi(String api) {
-        this.api = api;
+    public void setApis(Set<String> apis) {
+        this.apis = apis;
     }
 
-    public String getWorkspace() {
-        return workspace;
+    public Set<String> getWorkspaces() {
+        return workspaces;
     }
 
-    public void setWorkspace(String workspace) {
-        this.workspace = workspace;
+    public void setWorkspaces(Set<String> workspaces) {
+        this.workspaces = workspaces;
     }
 
-    public Pattern getPathPattern() {
-        return pathPattern;
+    public Set<Pattern> getPathPatterns() {
+        return pathPatterns;
     }
 
-    public void setPathPattern(Pattern pathPattern) {
-        this.pathPattern = pathPattern;
+    public void setPathPatterns(Set<Pattern> pathPatterns) {
+        this.pathPatterns = pathPatterns;
     }
 
-    public String getNodeType() {
-        return nodeType;
+    public Set<String> getNodeTypes() {
+        return nodeTypes;
     }
 
-    public void setNodeType(String nodeType) {
-        this.nodeType = nodeType;
+    public void setNodeTypes(Set<String> nodeTypes) {
+        this.nodeTypes = nodeTypes;
     }
 
     public int getPriority() {

@@ -20,7 +20,7 @@
 
     <osgi:service interface="org.jahia.modules.securityfilter.PermissionService" ref="org.jahia.modules.securityfilter.impl.PermissionsConfig" />
 
-    <osgi:service interface="org.osgi.service.cm.ManagedService" ref="org.jahia.modules.securityfilter.impl.PermissionsConfig">
+    <osgi:service interface="org.osgi.service.cm.ManagedServiceFactory" ref="org.jahia.modules.securityfilter.impl.PermissionsConfig">
         <osgi:service-properties>
             <entry key="service.pid" value="org.jahia.modules.api.permissions"/>
             <entry key="service.description" value="JCREST-API configuration service"/>
