@@ -14,7 +14,7 @@
         <property name="permissionsConfig" ref="org.jahia.modules.securityfilter.impl.PermissionsConfig"/>
         <property name="priority" value="26"/>
         <property name="applyOnTemplateTypes" value="json"/>
-        <property name="applyOnAjaxRequest" value="true"/>
+        <property name="applyOnConfigurations" value="page"/>
     </bean>
 
 
