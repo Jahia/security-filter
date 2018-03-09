@@ -30,10 +30,10 @@
     <parent>
         <groupId>org.jahia.modules</groupId>
         <artifactId>jahia-modules</artifactId>
-        <version>7.0.0.0</version>
+        <version>7.1.0.0</version>
     </parent>
     <artifactId>security-filter</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <name>Jahia API security config and filter</name>
     <description>Jahia API security config and filter</description>
