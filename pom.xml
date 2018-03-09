@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    ==========================================================================================
+    =                            JAHIA'S ENTERPRISE DISTRIBUTION                             =
+    ==========================================================================================
+
+                                     http://www.jahia.com
+
+    JAHIA'S ENTERPRISE DISTRIBUTIONS LICENSING - IMPORTANT INFORMATION
+    ==========================================================================================
+
+        Copyright (C) 2002-2017 Jahia Solutions Group. All rights reserved.
+
+        This file is part of a Jahia's Enterprise Distribution.
+
+        Jahia's Enterprise Distributions must be used in accordance with the terms
+        contained in the Jahia Solutions Group Terms & Conditions as well as
+        the Jahia Sustainable Enterprise License (JSEL).
+
+        For questions regarding licensing, support, production usage...
+        please contact our team at sales@jahia.com or go to http://www.jahia.com/license.
+
+    ==========================================================================================
+
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.jahia.modules</groupId>
+        <artifactId>jahia-modules</artifactId>
+        <version>7.0.0.0</version>
+    </parent>
+    <artifactId>security-filter</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>bundle</packaging>
+    <name>Jahia API security config and filter</name>
+    <description>Jahia API security config and filter</description>
+    <scm>
+        <connection>scm:git:git@github.com:Jahia/security-filter.git</connection>
+        <developerConnection>scm:git:git@github.com:Jahia/security-filter.git</developerConnection>
+        <url>scm:git:git@github.com:Jahia/security-filter.git</url>
+        <tag>HEAD</tag>
+    </scm>
+
+    <repositories>
+        <repository>
+            <id>jahia-public</id>
+            <name>Jahia Public Repository</name>
+            <url>https://devtools.jahia.com/nexus/content/groups/public</url>
+            <releases>
+                <enabled>true</enabled>
+                <updatePolicy>never</updatePolicy>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
+    <properties>
+        <jahia-module-type>system</jahia-module-type>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Export-Package>org.jahia.modules.securityfilter</Export-Package>
+                    </instructions>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
