@@ -50,7 +50,7 @@ Or a combination of all criterias :
 permission.digitallPostsInLive.pathPattern=/sites/digitall/.*
 permission.digitallPostsInLive.nodeType=jnt:post,jnt:message
 permission.digitallPostsInLive.workspace=live
-permission.digitallPostsInLive.requiredPermission=jcr:write_default
+permission.digitallPostsInLive.requiredPermission=jcr:write
 ```
 
 ## Render filter
