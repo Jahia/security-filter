@@ -123,11 +123,7 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
                 if (map.containsKey("priority")) {
                     permission.setPriority(Integer.parseInt(map.get("priority")));
                 }
-                if (permission.getRequiredPermission() != null) {
-                    newPermissions.add(permission);
-                } else {
-                    logger.warn("No required permission set : " + map);
-                }
+                newPermissions.add(permission);
             }
         }
 
@@ -183,7 +179,7 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
                 }
             }
             if (check) {
-                return ((JCRNodeWrapper) node).hasPermission(permission.getRequiredPermission());
+                return permission.getRequiredPermission() == null || ((JCRNodeWrapper) node).hasPermission(permission.getRequiredPermission());
             }
         }
         return true;
