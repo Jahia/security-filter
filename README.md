@@ -1,19 +1,17 @@
 # API Security service and filter
 
-This module provides a service and a render filter which can be by different API providers to secure access. A centralized
+This module provides a service and a render filter which can be fed by different API providers to secure access. A centralized
 configuration file provides rules for APIs associating an operation to a required permission.
 
 ## Permission configuration
 
 API can be restricted based on permissions by adding `org.jahia.modules.api.permissions-*.cfg` files into `digital-factory-data/karaf/etc`.
-These files contain a list of rules which will be checked for each node potentially returned by the API. Rules coming from all files are merged 
-and sorted. Rules can be based on path, node type and/or workspace. 
+These files contain a list of rules which will be checked for each node potentially returned by the API. Rules coming from all files are merged and sorted. Rules can be based on path, node type and/or workspace. 
 
 A permission check is always done on a JCR node, and is associated with an API name. Different API names are provided for 
 json views, the JCRest API module, or the GraphQL API.
 
-The first rule that match defines the permission that will be checked on the node to 
-ensure the user is correctly allowed to use the API on it. 
+The first rule that matches defines the permission that will be checked on the node to ensure the user is correctly allowed to use the API on it. 
 
 A permission rule is defined by a list of entries of the following format :
 
@@ -22,7 +20,7 @@ permission.<rulename>.<propertyname>=<value>
 ```
 
 A rule can define a `requiredPermission` property. This is the name of the permission that will be checked if the rule matches.
-If no `requiredPermission` is set, no other rules will be tested, and so no permission need to be checked.
+If no `requiredPermission` is set, no other rules will be tested, and no permission needs to be checked.
 
 A rule can specify any number of matching criteria. Each of these criteria can have a single value or a comma separated list of values.
  - `api` : The names of the API, if the rule should only apply to some entry points
