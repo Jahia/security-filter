@@ -25,10 +25,10 @@ A rule can define a `requiredPermission` property. This is the name of the permi
 If no `requiredPermission` is set, no other rules will be tested, and so no permission need to be checked.
 
 A rule can specify any number of matching criteria. Each of these criteria can have a single value or a comma separated list of values.
- - `apis` : The names of the API, if the rule should only apply to some entry points
- - `pathPatterns` : Regular expressions that will be tested on the node path.
- - `workspaces` : `live` or `default`, only request on the specified workspace will match.
- - `nodeTypes` : Only request on nodes of these type will match.
+ - `api` : The names of the API, if the rule should only apply to some entry points
+ - `pathPattern` : Regular expressions that will be tested on the node path.
+ - `workspace` : `live` or `default`, only request on the specified workspace will match.
+ - `nodeType` : Only request on nodes of these type will match.
 
 An optional priority can be also specified - the rules with the lowest value will be executed first. Default priority is 0.
 
@@ -63,14 +63,14 @@ The API name contains the template type and the name of the view itself : `view.
 So for example, the following rule will apply to all requests on the tree.json view :
 
 ```
-permission.tree.apis=view.json.tree
+permission.tree.api=view.json.tree
 ```
 
 The following rule will match all json views on pages :
 
 ```
-permission.tree.apis=view.json
-permission.tree.nodeTypes=jnt:page
+permission.tree.api=view.json
+permission.tree.nodeType=jnt:page
 ```
 
 ## Module
