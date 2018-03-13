@@ -102,6 +102,7 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
             }
             for (Map<String, String> map : permissionConfig.values()) {
                 Permission permission = new Permission();
+                permission.setAccess(map.get("access"));
                 permission.setRequiredPermission(map.get("requiredPermission"));
 
                 if (map.containsKey("nodeType")) {
@@ -181,6 +182,13 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
                 }
             }
             if (check) {
+                if (permission.getAccess() != null) {
+                    if (permission.getAccess().equalsIgnoreCase("denied")) {
+                        return false;
+                    } else if (permission.getAccess().equalsIgnoreCase("restricted")) {
+                        return ((JCRNodeWrapper) node).hasPermission("jcr:addChildNodes_default");
+                    }
+                }
                 return permission.getRequiredPermission() == null || ((JCRNodeWrapper) node).hasPermission(permission.getRequiredPermission());
             }
         }

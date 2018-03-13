@@ -52,12 +52,21 @@ import java.util.regex.Pattern;
  * Will check the requiredPermission if all conditions api / workspace / pathPattern / nodeType matches
  */
 public class Permission {
+    private String access;
     private String requiredPermission;
     private Set<String> apis;
     private Set<String> workspaces;
     private Set<Pattern> pathPatterns;
     private Set<String> nodeTypes;
     private int priority = 0;
+
+    public String getAccess() {
+        return access;
+    }
+
+    public void setAccess(String access) {
+        this.access = access;
+    }
 
     public String getRequiredPermission() {
         return requiredPermission;

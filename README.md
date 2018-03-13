@@ -19,8 +19,13 @@ A permission rule is defined by a list of entries of the following format :
 permission.<rulename>.<propertyname>=<value>
 ```
 
-A rule can define a `requiredPermission` property. This is the name of the permission that will be checked if the rule matches.
-If no `requiredPermission` is set, no other rules will be tested, and no permission needs to be checked.
+A rule can define an `access` or a `requiredPermission` property. `access` can take 2 different values : 
+- `denied` : Forbidden for everybody
+- `restricted` : Only allowed for users who have full access on the node
+
+The check can be defined more precisely by using `requiredPermission` instead : the value is the name of the permission that will be checked if the rule matches.
+
+If no `access` or `requiredPermission` is set, the API is granted - no other rules will be tested, and no permission needs to be checked.
 
 A rule can specify any number of matching criteria. Each of these criteria can have a single value or a comma separated list of values.
  - `api` : The names of the API, if the rule should only apply to some entry points
@@ -36,7 +41,7 @@ permission.checkFirst.priority=-10
 
 A rule with no condition will always match (and thus, should have a very high value for priority so that it is checked last):
 ```
-permission.global.requiredPermission=jcr:write_default
+permission.global.access=restricted
 permission.global.priority=99999
 ```
 
