@@ -62,8 +62,8 @@ import java.util.regex.Pattern;
  * Bound to org.jahia.modules.api.permissions.cfg
  */
 public class PermissionsConfig implements PermissionService, ManagedServiceFactory {
+
     private static final Logger logger = LoggerFactory.getLogger(PermissionsConfig.class);
-    private final static PermissionsConfig INSTANCE = new PermissionsConfig();
 
     private PermissionsConfig() {
     }
@@ -151,6 +151,8 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
             }
         });
         permissions = newPermissions;
+
+        logger.info("Security configuration reloaded");
     }
 
     public boolean hasPermission(String apiToCheck, Node node) throws RepositoryException {
