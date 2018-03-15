@@ -49,10 +49,8 @@ import org.jahia.services.render.filter.AbstractFilter;
 import org.jahia.services.render.filter.RenderChain;
 import org.jahia.services.render.scripting.Script;
 
-import java.util.Properties;
-
 /**
- * Filter that checks permission configuration before rendering a view
+ * Filter that checks permission configuration before rendering a view.
  */
 public class PermissionFilter extends AbstractFilter {
 
@@ -73,8 +71,7 @@ public class PermissionFilter extends AbstractFilter {
     @Override
     public String prepare(RenderContext renderContext, Resource resource, RenderChain chain) throws Exception {
         // Bypass the check if a specific permission has been defined on the view through the requirePermissions property
-        Script script = (Script)renderContext.getRequest().getAttribute("script");
-        if (script != null && (script.getView().getProperties().getProperty("requirePermissions") != null || script.getView().getDefaultProperties().getProperty("requirePermissions") != null)) {
+        if (hasViewRequirePermissions(renderContext)) {
             return null;
         }
 
@@ -84,5 +81,11 @@ public class PermissionFilter extends AbstractFilter {
             throw new PermissionSecurityAccessDeniedException(api, resource.getPath());
         }
         return null;
+    }
+
+    private boolean hasViewRequirePermissions(RenderContext renderContext) {
+        Script script = (Script) renderContext.getRequest().getAttribute("script");
+        return script != null && (script.getView().getProperties().getProperty("requirePermissions") != null
+                || script.getView().getDefaultProperties().getProperty("requirePermissions") != null);
     }
 }
