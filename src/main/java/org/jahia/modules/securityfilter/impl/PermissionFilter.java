@@ -49,6 +49,8 @@ import org.jahia.services.render.filter.AbstractFilter;
 import org.jahia.services.render.filter.RenderChain;
 import org.jahia.services.render.scripting.Script;
 
+import java.util.Properties;
+
 /**
  * Filter that checks permission configuration before rendering a view
  */
@@ -72,7 +74,7 @@ public class PermissionFilter extends AbstractFilter {
     public String prepare(RenderContext renderContext, Resource resource, RenderChain chain) throws Exception {
         // Bypass the check if a specific permission has been defined on the view through the requirePermissions property
         Script script = (Script)renderContext.getRequest().getAttribute("script");
-        if (script != null && script.getView().getProperties().getProperty("requirePermissions") != null) {
+        if (script != null && (script.getView().getProperties().getProperty("requirePermissions") != null || script.getView().getDefaultProperties().getProperty("requirePermissions") != null)) {
             return null;
         }
 
