@@ -62,6 +62,11 @@ public class PermissionFilter extends AbstractFilter {
         this.permissionsConfig = permissionsConfig;
     }
 
+    @Override
+    public boolean areConditionsMatched(RenderContext renderContext, Resource resource) {
+        return super.areConditionsMatched(renderContext, resource) || (resource.getModuleParams().get("forcePermissionFilterCheck") != null);
+    }
+
     public void setApplyOnAjaxRequest(Boolean apply) {
         if (apply) {
             addCondition(new AjaxRequestCondition());
