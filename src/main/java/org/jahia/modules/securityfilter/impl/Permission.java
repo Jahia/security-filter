@@ -43,6 +43,7 @@
  */
 package org.jahia.modules.securityfilter.impl;
 
+import java.util.Collections;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -52,20 +53,24 @@ import java.util.regex.Pattern;
  * Will check the requiredPermission if all conditions api / workspace / pathPattern / nodeType matches
  */
 public class Permission {
-    private String access;
+    public static enum AccessType {
+        denied, restricted
+    }
+
+    private AccessType access;
     private String requiredPermission;
-    private Set<String> apis;
-    private Set<String> workspaces;
-    private Set<Pattern> pathPatterns;
-    private Set<String> nodeTypes;
+    private Set<String> apis = Collections.emptySet();
+    private Set<String> workspaces = Collections.emptySet();
+    private Set<Pattern> pathPatterns = Collections.emptySet();
+    private Set<String> nodeTypes = Collections.emptySet();
     private int priority = 0;
 
-    public String getAccess() {
+    public AccessType getAccess() {
         return access;
     }
 
     public void setAccess(String access) {
-        this.access = access;
+        this.access =  (access != null) ? AccessType.valueOf(access.toLowerCase()) : null;
     }
 
     public String getRequiredPermission() {
@@ -81,7 +86,7 @@ public class Permission {
     }
 
     public void setApis(Set<String> apis) {
-        this.apis = apis;
+        this.apis = (apis != null && !apis.isEmpty()) ? apis : Collections.<String>emptySet();
     }
 
     public Set<String> getWorkspaces() {
@@ -89,7 +94,7 @@ public class Permission {
     }
 
     public void setWorkspaces(Set<String> workspaces) {
-        this.workspaces = workspaces;
+        this.workspaces = (workspaces != null && !workspaces.isEmpty()) ? workspaces : Collections.<String>emptySet();
     }
 
     public Set<Pattern> getPathPatterns() {
@@ -97,7 +102,7 @@ public class Permission {
     }
 
     public void setPathPatterns(Set<Pattern> pathPatterns) {
-        this.pathPatterns = pathPatterns;
+        this.pathPatterns = (pathPatterns != null && !pathPatterns.isEmpty()) ? pathPatterns : Collections.<Pattern>emptySet();
     }
 
     public Set<String> getNodeTypes() {
@@ -105,7 +110,7 @@ public class Permission {
     }
 
     public void setNodeTypes(Set<String> nodeTypes) {
-        this.nodeTypes = nodeTypes;
+        this.nodeTypes = (nodeTypes != null && !nodeTypes.isEmpty()) ? nodeTypes : Collections.<String>emptySet();
     }
 
     public int getPriority() {

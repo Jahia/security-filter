@@ -45,8 +45,8 @@ package org.jahia.modules.securityfilter.impl;
 
 import org.apache.commons.lang.StringUtils;
 import org.jahia.modules.securityfilter.PermissionService;
+import org.jahia.modules.securityfilter.impl.Permission.AccessType;
 import org.jahia.services.content.JCRNodeWrapper;
-import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedServiceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,7 +57,7 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 /**
- * Permissions configuration
+ * Access permission configuration service.
  * <p>
  * Bound to org.jahia.modules.api.permissions.cfg
  */
@@ -65,7 +65,62 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
 
     private static final Logger logger = LoggerFactory.getLogger(PermissionsConfig.class);
 
+    private static final Comparator<Permission> PERMISSION_COMPARATOR = new Comparator<Permission>() {
+        @Override
+        public int compare(Permission o1, Permission o2) {
+            return o1.getPriority() - o2.getPriority();
+        }
+    };
+
+    private static boolean apiMatches(String apiToCheck, Permission permission) {
+        if (permission.getApis().isEmpty()) {
+            return true;
+        }
+
+        for (String api : permission.getApis()) {
+            if (api.equals(apiToCheck) || apiToCheck.startsWith(api + ".")) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static boolean nodeTypeMatches(Node node, Permission permission) throws RepositoryException {
+        if (permission.getNodeTypes().isEmpty()) {
+            return true;
+        }
+
+        for (String nodeType : permission.getNodeTypes()) {
+            if (node.isNodeType(nodeType)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static boolean pathMatches(String nodePath, Permission permission) {
+        if (permission.getPathPatterns().isEmpty()) {
+            return true;
+        }
+
+        for (Pattern pattern : permission.getPathPatterns()) {
+            if (pattern.matcher(nodePath).matches()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static boolean workspaceMatches(Node node, Permission permission) throws RepositoryException {
+        return permission.getWorkspaces().isEmpty()
+                || permission.getWorkspaces().contains(node.getSession().getWorkspace().getName());
+    }
+
     private PermissionsConfig() {
+        super();
     }
 
     private List<Permission> permissions = new ArrayList<Permission>();
@@ -78,24 +133,23 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
     }
 
     /**
-     * Configuration change - load all permissions from cfg
+     * Configuration change - load all permissions from cfg file.
      *
      * @param properties The new properties
-     * @throws ConfigurationException
      */
     @Override
-    public void updated(String pid, Dictionary<String, ?> properties) throws ConfigurationException {
+    public void updated(String pid, Dictionary<String, ?> properties) {
         List<Permission> newPermissions = new ArrayList<Permission>();
         if (properties != null) {
             Enumeration<String> keys = properties.keys();
-            Map<String, Map<String, String>> permissionConfig = new HashMap<String, Map<String, String>>();
+            Map<String, Map<String, String>> permissionConfig = new LinkedHashMap<String, Map<String, String>>();
             while (keys.hasMoreElements()) {
                 String key = keys.nextElement();
                 if (StringUtils.startsWith(key, "permission.")) {
                     String subKey = StringUtils.substringAfter(key, "permission.");
                     String name = StringUtils.substringBefore(subKey, ".");
                     if (!permissionConfig.containsKey(name)) {
-                        permissionConfig.put(name, new HashMap<String, String>());
+                        permissionConfig.put(name, new LinkedHashMap<String, String>());
                     }
                     permissionConfig.get(name).put(StringUtils.substringAfter(subKey, "."), (String) properties.get(key));
                 }
@@ -106,13 +160,13 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
                 permission.setRequiredPermission(map.get("requiredPermission"));
 
                 if (map.containsKey("nodeType")) {
-                    permission.setNodeTypes(new HashSet<String>(Arrays.asList(StringUtils.split(map.get("nodeType"), ", "))));
+                    permission.setNodeTypes(new LinkedHashSet<String>(Arrays.asList(StringUtils.split(map.get("nodeType"), ", "))));
                 }
                 if (map.containsKey("api")) {
-                    permission.setApis(new HashSet<String>(Arrays.asList(StringUtils.split(map.get("api"), ", "))));
+                    permission.setApis(new LinkedHashSet<String>(Arrays.asList(StringUtils.split(map.get("api"), ", "))));
                 }
                 if (map.containsKey("pathPattern")) {
-                    Set<Pattern> patterns = new HashSet<Pattern>();
+                    Set<Pattern> patterns = new LinkedHashSet<Pattern>();
                     for (String exp : StringUtils.split(map.get("pathPattern"), ", ")) {
                         patterns.add(Pattern.compile(exp));
                     }
@@ -140,57 +194,47 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
         updatePermissions();
     }
 
-    public void updatePermissions() {
+    private void updatePermissions() {
         List<Permission> newPermissions = new ArrayList<Permission>();
         for (List<Permission> permissionList : permissionsByPid.values()) {
             newPermissions.addAll(permissionList);
         }
-        Collections.sort(newPermissions, new Comparator<Permission>() {
-            @Override
-            public int compare(Permission o1, Permission o2) {
-                return o1.getPriority() - o2.getPriority();
-            }
-        });
+        Collections.sort(newPermissions, PERMISSION_COMPARATOR);
         permissions = newPermissions;
 
         logger.info("Security configuration reloaded");
     }
 
+    @Override
     public boolean hasPermission(String apiToCheck, Node node) throws RepositoryException {
-        logger.debug("Checking api permission " + apiToCheck + " for " + node.getPath());
+        String nodePath = node.getPath();
+
+        boolean hasPermission = hasPermissionInternal(apiToCheck, nodePath, node);
+
+        if (hasPermission) {
+            logger.debug("Checking api permission '{}' for {}: GRANTED", apiToCheck, nodePath);
+        } else {
+            logger.debug("Checking api permission '{}' for {}: DENIED", apiToCheck, nodePath);
+        }
+
+        return hasPermission;
+    }
+
+    private boolean hasPermissionInternal(String apiToCheck, String nodePath, Node node) throws RepositoryException {
         for (Permission permission : permissions) {
-            boolean check = true;
-            if (permission.getWorkspaces() != null && !permission.getWorkspaces().isEmpty()) {
-                check = permission.getWorkspaces().contains(node.getSession().getWorkspace().getName());
+            if (!workspaceMatches(node, permission) || !apiMatches(apiToCheck, permission)
+                    || !pathMatches(nodePath, permission) || !nodeTypeMatches(node, permission)) {
+                continue;
             }
-            if (check && permission.getApis() != null && !permission.getApis().isEmpty()) {
-                check = false;
-                for (String api : permission.getApis()) {
-                    check |= api.equals(apiToCheck) || apiToCheck.startsWith(api + ".");
+            if (permission.getAccess() != null) {
+                if (permission.getAccess() == AccessType.denied) {
+                    return false;
+                } else if (permission.getAccess() == AccessType.restricted) {
+                    return ((JCRNodeWrapper) node).hasPermission("api-access");
                 }
             }
-            if (check && permission.getNodeTypes() != null && !permission.getNodeTypes().isEmpty()) {
-                check = false;
-                for (String nodeType : permission.getNodeTypes()) {
-                    check |= node.isNodeType(nodeType);
-                }
-            }
-            if (check && permission.getPathPatterns() != null && !permission.getPathPatterns().isEmpty()) {
-                check = false;
-                for (Pattern pattern : permission.getPathPatterns()) {
-                    check |= pattern.matcher(node.getPath()).matches();
-                }
-            }
-            if (check) {
-                if (permission.getAccess() != null) {
-                    if (permission.getAccess().equalsIgnoreCase("denied")) {
-                        return false;
-                    } else if (permission.getAccess().equalsIgnoreCase("restricted")) {
-                        return ((JCRNodeWrapper) node).hasPermission("api-access");
-                    }
-                }
-                return permission.getRequiredPermission() == null || ((JCRNodeWrapper) node).hasPermission(permission.getRequiredPermission());
-            }
+            return permission.getRequiredPermission() == null
+                    || ((JCRNodeWrapper) node).hasPermission(permission.getRequiredPermission());
         }
         return true;
     }
