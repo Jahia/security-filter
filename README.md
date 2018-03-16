@@ -21,7 +21,7 @@ permission.<rulename>.<propertyname>=<value>
 
 A rule can define an `access` or a `requiredPermission` property. `access` can take 2 different values : 
 - `denied` : Forbidden for everybody
-- `restricted` : Only allowed for users who have full access on the node
+- `restricted` : Only allowed for users who have the `api-access` permission on the node
 
 The check can be defined more precisely by using `requiredPermission` instead : the value is the name of the permission that will be checked if the rule matches.
 
