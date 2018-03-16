@@ -186,7 +186,7 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
                     if (permission.getAccess().equalsIgnoreCase("denied")) {
                         return false;
                     } else if (permission.getAccess().equalsIgnoreCase("restricted")) {
-                        return ((JCRNodeWrapper) node).hasPermission("jcr:addChildNodes_default");
+                        return ((JCRNodeWrapper) node).hasPermission("api-access");
                     }
                 }
                 return permission.getRequiredPermission() == null || ((JCRNodeWrapper) node).hasPermission(permission.getRequiredPermission());
