@@ -44,15 +44,23 @@
 package org.jahia.modules.securityfilter.impl;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.jackrabbit.core.security.JahiaPrivilegeRegistry;
+import org.jahia.exceptions.JahiaRuntimeException;
 import org.jahia.modules.securityfilter.PermissionService;
 import org.jahia.modules.securityfilter.impl.Permission.AccessType;
+import org.jahia.services.content.JCRCallback;
+import org.jahia.services.content.JCRContentUtils;
 import org.jahia.services.content.JCRNodeWrapper;
+import org.jahia.services.content.JCRSessionWrapper;
+import org.jahia.services.content.JCRTemplate;
 import org.osgi.service.cm.ManagedServiceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import javax.jcr.security.Privilege;
+
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -84,6 +92,30 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
         }
 
         return false;
+    }
+
+    private static boolean checkPermissionExists(final String permissionName) {
+        try {
+            return JCRTemplate.getInstance().doExecuteWithSystemSession(new JCRCallback<Boolean>() {
+
+                @Override
+                public Boolean doInJCR(JCRSessionWrapper session) throws RepositoryException {
+                    String name = JCRContentUtils.getExpandedName(permissionName,
+                            session.getWorkspace().getNamespaceRegistry());
+                    for (Privilege p : JahiaPrivilegeRegistry.getRegisteredPrivileges()) {
+                        if (p.getName().equals(name)) {
+                            return Boolean.TRUE;
+                        }
+                    }
+                    return Boolean.FALSE;
+                }
+            });
+        } catch (RepositoryException e) {
+            throw new JahiaRuntimeException(
+                    "Unable to check the presence of the configured permission for the restricted API access: "
+                            + permissionName,
+                    e);
+        }
     }
 
     private static boolean nodeTypeMatches(Node node, Permission permission) throws RepositoryException {
@@ -119,13 +151,15 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
                 || permission.getWorkspaces().contains(node.getSession().getWorkspace().getName());
     }
 
-    private PermissionsConfig() {
-        super();
-    }
-
     private List<Permission> permissions = new ArrayList<Permission>();
 
     private Map<String, List<Permission>> permissionsByPid = new HashMap<String, List<Permission>>();
+
+    private String restrictedAccessPermissionName; 
+
+    private PermissionsConfig() {
+        super();
+    }
 
     @Override
     public String getName() {
@@ -230,12 +264,20 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
                 if (permission.getAccess() == AccessType.denied) {
                     return false;
                 } else if (permission.getAccess() == AccessType.restricted) {
-                    return ((JCRNodeWrapper) node).hasPermission("api-access");
+                    return ((JCRNodeWrapper) node).hasPermission(restrictedAccessPermissionName);
                 }
             }
             return permission.getRequiredPermission() == null
                     || ((JCRNodeWrapper) node).hasPermission(permission.getRequiredPermission());
         }
         return true;
+    }
+
+    public void setRestrictedAccessPermissionName(String restrictedAccessPermissionName) {
+        this.restrictedAccessPermissionName = checkPermissionExists(restrictedAccessPermissionName)
+                ? restrictedAccessPermissionName
+                : "jcr:addChildNodes_default";
+
+        logger.info("Using {} permission for restricted access", this.restrictedAccessPermissionName);
     }
 }
