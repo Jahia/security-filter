@@ -56,6 +56,7 @@ import org.jahia.services.content.JCRTemplate;
 import org.osgi.service.cm.ManagedServiceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.InitializingBean;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -69,7 +70,7 @@ import java.util.regex.Pattern;
  * <p>
  * Bound to org.jahia.modules.api.permissions.cfg
  */
-public class PermissionsConfig implements PermissionService, ManagedServiceFactory {
+public class PermissionsConfig implements PermissionService, ManagedServiceFactory, InitializingBean {
 
     private static final Logger logger = LoggerFactory.getLogger(PermissionsConfig.class);
 
@@ -154,6 +155,8 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
     private List<Permission> permissions = new ArrayList<Permission>();
 
     private Map<String, List<Permission>> permissionsByPid = new HashMap<String, List<Permission>>();
+
+    private String restrictedAccessPermissionFallbackName; 
 
     private String restrictedAccessPermissionName; 
 
@@ -264,7 +267,8 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
                 if (permission.getAccess() == AccessType.denied) {
                     return false;
                 } else if (permission.getAccess() == AccessType.restricted) {
-                    return ((JCRNodeWrapper) node).hasPermission(restrictedAccessPermissionName);
+                    JCRNodeWrapper jcrNode = (JCRNodeWrapper) node;
+                    return jcrNode.hasPermission(getRestrictedPermissionName(jcrNode));
                 }
             }
             return permission.getRequiredPermission() == null
@@ -273,10 +277,24 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
         return true;
     }
 
+    private String getRestrictedPermissionName(JCRNodeWrapper node) {
+        return node.getProvider().isDefault() ? restrictedAccessPermissionName : restrictedAccessPermissionFallbackName;
+    }
+
+    public void setRestrictedAccessPermissionFallbackName(String restrictedAccessPermissionFallbackName) {
+        this.restrictedAccessPermissionFallbackName = restrictedAccessPermissionFallbackName;
+    }
+
     public void setRestrictedAccessPermissionName(String restrictedAccessPermissionName) {
-        this.restrictedAccessPermissionName = checkPermissionExists(restrictedAccessPermissionName)
-                ? restrictedAccessPermissionName
-                : "jcr:addChildNodes_default";
+        this.restrictedAccessPermissionName = restrictedAccessPermissionName;
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        if (!restrictedAccessPermissionFallbackName.equals(restrictedAccessPermissionName)
+                && !checkPermissionExists(restrictedAccessPermissionName)) {
+            restrictedAccessPermissionName = restrictedAccessPermissionFallbackName;
+        }
 
         logger.info("Using {} permission for restricted access", this.restrictedAccessPermissionName);
     }

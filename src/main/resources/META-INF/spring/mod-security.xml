@@ -8,6 +8,7 @@
                         http://www.eclipse.org/gemini/blueprint/schema/blueprint http://www.eclipse.org/gemini/blueprint/schema/blueprint/gemini-blueprint.xsd">
 
     <bean id="org.jahia.modules.securityfilter.impl.PermissionsConfig" class="org.jahia.modules.securityfilter.impl.PermissionsConfig">
+        <property name="restrictedAccessPermissionFallbackName" value="${jahia.rest.restrictedAccessPermissionName:jcr:addChildNodes_default}"/>
         <property name="restrictedAccessPermissionName" value="${jahia.rest.restrictedAccessPermissionName:api-access}"/>
     </bean>
 
