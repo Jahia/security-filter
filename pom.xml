@@ -52,7 +52,7 @@
         <version>7.0.0.0</version>
     </parent>
     <artifactId>security-filter</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <name>Jahia API security config and filter</name>
     <description>Jahia API security config and filter</description>
@@ -60,7 +60,7 @@
         <connection>scm:git:git@github.com:Jahia/security-filter.git</connection>
         <developerConnection>scm:git:git@github.com:Jahia/security-filter.git</developerConnection>
         <url>scm:git:git@github.com:Jahia/security-filter.git</url>
-        <tag>1_0_0</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <repositories>
