@@ -58,6 +58,10 @@ permission.digitallPostsInLive.workspace=live
 permission.digitallPostsInLive.requiredPermission=jcr:write
 ```
 
+### Permissions in a module
+
+A module can package a configuration file in META-INF/configurations folder. Since DX version 7.2.2.0, all `cfg` files in this folder are deployed in `karaf/etc` at module startup. This gives the possibility for a module to provide a defaut configuration file that can be edited by the user. The files are never updated nor removed automatically. The file name can contain the name of the module : `org.jahia.modules.api.permissions-<modulename>.cfg`.
+
 ## Render filter
 
 A render filter catches all ajax calls to `*.json` and `*.html.ajax`. The filter calls the service to check if the request is allowed or not.
