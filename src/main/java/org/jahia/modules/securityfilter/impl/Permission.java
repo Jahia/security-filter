@@ -59,6 +59,7 @@ public class Permission {
 
     private AccessType access;
     private String requiredPermission;
+    private String permission;
     private Set<String> apis = Collections.emptySet();
     private Set<String> workspaces = Collections.emptySet();
     private Set<Pattern> pathPatterns = Collections.emptySet();
@@ -79,6 +80,14 @@ public class Permission {
 
     public void setRequiredPermission(String requiredPermission) {
         this.requiredPermission = requiredPermission;
+    }
+
+    public String getPermission() {
+        return permission;
+    }
+
+    public void setPermission(String permission) {
+        this.permission = permission;
     }
 
     public Set<String> getApis() {

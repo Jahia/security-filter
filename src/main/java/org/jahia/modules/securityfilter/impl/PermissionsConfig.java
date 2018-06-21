@@ -195,6 +195,7 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
                 Permission permission = new Permission();
                 permission.setAccess(map.get("access"));
                 permission.setRequiredPermission(map.get("requiredPermission"));
+                permission.setPermission(map.get("permission"));
 
                 if (map.containsKey("nodeType")) {
                     permission.setNodeTypes(new LinkedHashSet<String>(Arrays.asList(StringUtils.split(map.get("nodeType"), ", "))));
@@ -271,8 +272,12 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
                     return jcrNode.hasPermission(getRestrictedPermissionName(jcrNode));
                 }
             }
-            return permission.getRequiredPermission() == null
-                    || ((JCRNodeWrapper) node).hasPermission(permission.getRequiredPermission());
+            if (permission.getPermission() != null && ((JCRNodeWrapper) node).hasPermission(permission.getPermission())) {
+                return true;
+            } else {
+                return permission.getRequiredPermission() == null
+                        || ((JCRNodeWrapper) node).hasPermission(permission.getRequiredPermission());
+            }
         }
         return true;
     }

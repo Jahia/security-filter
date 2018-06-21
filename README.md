@@ -19,11 +19,13 @@ A permission rule is defined by a list of entries of the following format :
 permission.<rulename>.<propertyname>=<value>
 ```
 
-A rule can define an `access` or a `requiredPermission` property. `access` can take 2 different values : 
+A rule can define an `access`, `permission` or `requiredPermission` property. `access` can take 2 different values : 
 - `denied` : Forbidden for everybody
 - `restricted` : Only allowed for users who have the `api-access` permission on the node
 
-The check can be defined more precisely by using `requiredPermission` instead : the value is the name of the permission that will be checked if the rule matches.
+The check can be defined more precisely by using `requiredPermission` instead : the value is the name of the permission that will be checked if the rule matches. The user must have this permission to be granted access.
+
+Another option is to specify `permission` - if the user has the permission, his access will be granted, and no other rule will be checked. But the permission is not required - if he does not have it, subsequent rules will be checked. 
 
 If no `access` or `requiredPermission` is set, the API is granted - no other rules will be tested, and no permission needs to be checked.
 
