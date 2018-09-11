@@ -49,7 +49,7 @@
     <parent>
         <groupId>org.jahia.modules</groupId>
         <artifactId>jahia-modules</artifactId>
-        <version>7.0.0.0</version>
+        <version>7.2.0.0</version>
     </parent>
     <artifactId>security-filter</artifactId>
     <version>1.0.2-SNAPSHOT</version>
@@ -81,6 +81,14 @@
     <properties>
         <jahia-module-type>system</jahia-module-type>
     </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.auth0</groupId>
+            <artifactId>java-jwt</artifactId>
+            <version>3.4.0</version>
+        </dependency>
+    </dependencies>
 
     <build>
         <plugins>

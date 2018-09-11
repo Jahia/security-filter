@@ -30,4 +30,28 @@
         </osgi:service-properties>
     </osgi:service>
 
+
+    <!--JWT-->
+
+    <bean id="jwtFilter" class="org.jahia.modules.securityfilter.jwt.impl.JWTFilter">
+        <property name="description" value="Filter that checks permission configuration before rendering a view"/>
+        <property name="jwtConfig" ref="org.jahia.modules.securityfilter.jwt.impl.JWTConfig"/>
+        <property name="priority" value="25"/>
+        <property name="applyOnTemplateTypes" value="json,html"/>
+        <property name="applyOnConfigurations" value="page"/>
+    </bean>
+
+    <bean id="org.jahia.modules.securityfilter.jwt.impl.JWTConfig" class="org.jahia.modules.securityfilter.jwt.impl.JWTConfig" />
+
+    <osgi:service interface="org.jahia.modules.securityfilter.jwt.JWTService" ref="org.jahia.modules.securityfilter.jwt.impl.JWTConfig" />
+
+    <osgi:service interface="org.osgi.service.cm.ManagedServiceFactory" ref="org.jahia.modules.securityfilter.jwt.impl.JWTConfig">
+        <osgi:service-properties>
+            <entry key="service.pid" value="org.jahia.modules.jwt.token"/>
+            <entry key="service.description" value="JWT token configuration service"/>
+            <entry key="service.vendor" value="Jahia Solutions Group SA"/>
+        </osgi:service-properties>
+    </osgi:service>
+
+    <!--End JWT-->
 </beans>
