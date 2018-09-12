@@ -68,8 +68,8 @@ public class JWTConfig implements JWTService, ManagedServiceFactory, Initializin
                     }
                 }
             }
+            logger.info("JWT configuration reloaded");
         }
-
         littleTest();
     }
 
@@ -227,6 +227,8 @@ public class JWTConfig implements JWTService, ManagedServiceFactory, Initializin
     private void littleTest() {
         Map<String, Object> claims = new HashMap<String, Object>();
         claims.put("stringList", Arrays.asList("value1", "value2"));
+        claims.put("scopes", Arrays.asList("scope1", "scope2"));
+        //claims.put("referer", Arrays.asList("https://boomboom.com"));
         claims.put("integerList", Arrays.asList(1, 2));
         claims.put("integer", 1);
         claims.put("double", 2.55);

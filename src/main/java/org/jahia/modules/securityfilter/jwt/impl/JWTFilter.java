@@ -9,8 +9,10 @@ import org.jahia.services.render.filter.AbstractFilter;
 import org.jahia.services.render.filter.RenderChain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 public class JWTFilter extends AbstractFilter {
 
@@ -32,22 +34,42 @@ public class JWTFilter extends AbstractFilter {
 
         tvr.setToken(null);
         tvr.setVerificationStatusCode(TokenVerificationResult.VerificationStatus.NOT_FOUND);
+        tvr.setMessage("Token not found");
+        THREAD_LOCAL.set(tvr);
 
         if (authorization != null && authorization.contains(BEARER)) {
             String token = StringUtils.substringAfter(authorization, BEARER).trim();
 
             try {
                 DecodedJWT decodedToken = jwtConfig.verifyToken(token);
+
+                //Check referers
+                String referer = request.getHeader("referer");
+                List<String> referers = decodedToken.getClaim("referer").asList(String.class);
+                if (referers != null && !referers.contains(referer)) {
+                    tvr.setVerificationStatusCode(TokenVerificationResult.VerificationStatus.REJECTED);
+                    tvr.setMessage("Incorrect referer in token");
+                    return null;
+                }
+                //Check IP
+                String ip = request.getHeader("X-FORWARDED-FOR") != null ? request.getHeader("X-FORWARDED-FOR") : request.getRemoteAddr();
+                List<String> ips = decodedToken.getClaim("ip").asList(String.class);
+                if (ips != null && !ips.contains(ip)) {
+                    tvr.setVerificationStatusCode(TokenVerificationResult.VerificationStatus.REJECTED);
+                    tvr.setMessage("Your IP did not match any of the permitted IPs");
+                    return null;
+                }
+
                 tvr.setToken(decodedToken);
                 tvr.setVerificationStatusCode(TokenVerificationResult.VerificationStatus.VERIFIED);
+                tvr.setMessage("Token verified");
             }
-            catch (JWTVerificationException e) {
+            catch (Exception e) {
                 tvr.setVerificationStatusCode(TokenVerificationResult.VerificationStatus.REJECTED);
-                logger.error("Failed to verify token", e);
+                tvr.setMessage("Failed to verify token");
+                logger.error("Failed to verify JWT token: {}", e.getMessage());
             }
         }
-
-        THREAD_LOCAL.set(tvr);
         return null;
     }
 

@@ -11,6 +11,7 @@ public class TokenVerificationResult {
     }
 
     private VerificationStatus verificationStatusCode;
+    private String message;
     private DecodedJWT token;
 
     public VerificationStatus getVerificationStatusCode() {
@@ -27,5 +28,13 @@ public class TokenVerificationResult {
 
     public void setToken(DecodedJWT token) {
         this.token = token;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 }
