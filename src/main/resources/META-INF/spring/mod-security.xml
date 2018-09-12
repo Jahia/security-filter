@@ -34,7 +34,7 @@
     <!--JWT-->
 
     <bean id="jwtFilter" class="org.jahia.modules.securityfilter.jwt.impl.JWTFilter">
-        <property name="description" value="Filter that checks permission configuration before rendering a view"/>
+        <property name="description" value="Filter checks if JWT exists in header and tries to verify it"/>
         <property name="jwtConfig" ref="org.jahia.modules.securityfilter.jwt.impl.JWTConfig"/>
         <property name="priority" value="25"/>
         <property name="applyOnTemplateTypes" value="json,html"/>

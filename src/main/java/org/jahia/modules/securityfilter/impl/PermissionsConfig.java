@@ -48,6 +48,8 @@ import org.apache.jackrabbit.core.security.JahiaPrivilegeRegistry;
 import org.jahia.exceptions.JahiaRuntimeException;
 import org.jahia.modules.securityfilter.PermissionService;
 import org.jahia.modules.securityfilter.impl.Permission.AccessType;
+import org.jahia.modules.securityfilter.jwt.impl.JWTFilter;
+import org.jahia.modules.securityfilter.jwt.impl.TokenVerificationResult;
 import org.jahia.services.content.JCRCallback;
 import org.jahia.services.content.JCRContentUtils;
 import org.jahia.services.content.JCRNodeWrapper;
@@ -152,6 +154,32 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
                 || permission.getWorkspaces().contains(node.getSession().getWorkspace().getName());
     }
 
+    private static boolean tokenMatches(Permission permission) {
+        TokenVerificationResult verificationResult = JWTFilter.getJWTTokenVerificationStatus();
+
+        //Permission is not using jwt and user is not trying to access resource with jwt
+        if (permission.getScopes().isEmpty() && verificationResult.getVerificationStatusCode() == TokenVerificationResult.VerificationStatus.NOT_FOUND) {
+            return true;
+        }
+
+        //Failed to verify token signature
+        if (verificationResult.getVerificationStatusCode() == TokenVerificationResult.VerificationStatus.REJECTED) {
+            return false;
+        }
+
+        //Token contains required scope, allow access
+        if (verificationResult.getToken() != null) {
+            List<String> tokenScopes = verificationResult.getToken().getClaim("scopes").asList(String.class);
+            for (String scope : permission.getScopes()) {
+                if (tokenScopes.contains(scope)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     private List<Permission> permissions = new ArrayList<Permission>();
 
     private Map<String, List<Permission>> permissionsByPid = new HashMap<String, List<Permission>>();
@@ -216,6 +244,9 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
                 if (map.containsKey("priority")) {
                     permission.setPriority(Integer.parseInt(map.get("priority")));
                 }
+                if (map.containsKey("scope")) {
+                    permission.setScopes(new LinkedHashSet<String>(Arrays.asList(StringUtils.split(map.get("scope"), ", "))));
+                }
                 newPermissions.add(permission);
             }
         }
@@ -261,7 +292,8 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
     private boolean hasPermissionInternal(String apiToCheck, String nodePath, Node node) throws RepositoryException {
         for (Permission permission : permissions) {
             if (!workspaceMatches(node, permission) || !apiMatches(apiToCheck, permission)
-                    || !pathMatches(nodePath, permission) || !nodeTypeMatches(node, permission)) {
+                    || !pathMatches(nodePath, permission) || !nodeTypeMatches(node, permission)
+                    || !tokenMatches(permission)) {
                 continue;
             }
             if (permission.getAccess() != null) {
@@ -279,7 +311,8 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
                         || ((JCRNodeWrapper) node).hasPermission(permission.getRequiredPermission());
             }
         }
-        return true;
+        //Make sure if no permissions are matched the request is denied
+        return false;
     }
 
     private String getRestrictedPermissionName(JCRNodeWrapper node) {

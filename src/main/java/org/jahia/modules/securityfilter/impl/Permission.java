@@ -64,6 +64,7 @@ public class Permission {
     private Set<String> workspaces = Collections.emptySet();
     private Set<Pattern> pathPatterns = Collections.emptySet();
     private Set<String> nodeTypes = Collections.emptySet();
+    private Set<String> scopes = Collections.emptySet();
     private int priority = 0;
 
     public AccessType getAccess() {
@@ -120,6 +121,14 @@ public class Permission {
 
     public void setNodeTypes(Set<String> nodeTypes) {
         this.nodeTypes = (nodeTypes != null && !nodeTypes.isEmpty()) ? nodeTypes : Collections.<String>emptySet();
+    }
+
+    public Set<String> getScopes() {
+        return scopes;
+    }
+
+    public void setScopes(Set<String> scopes) {
+        this.scopes = scopes;
     }
 
     public int getPriority() {
