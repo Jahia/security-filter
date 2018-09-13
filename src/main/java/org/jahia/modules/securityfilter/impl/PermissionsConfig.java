@@ -157,6 +157,11 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
     private static boolean tokenMatches(Permission permission) {
         TokenVerificationResult verificationResult = JWTFilter.getJWTTokenVerificationStatus();
 
+        //Ignore rule if JWT filter didn't run - TODO investigate this
+        if (verificationResult == null) {
+            return false;
+        }
+
         //Permission is not using jwt and user is not trying to access resource with jwt
         if (permission.getScopes().isEmpty() && verificationResult.getVerificationStatusCode() == TokenVerificationResult.VerificationStatus.NOT_FOUND) {
             return true;
@@ -312,7 +317,8 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
             }
         }
         //Make sure if no permissions are matched the request is denied
-        return false;
+//        return false;
+        return true;
     }
 
     private String getRestrictedPermissionName(JCRNodeWrapper node) {

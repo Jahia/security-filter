@@ -141,10 +141,10 @@ public class JWTConfig implements JWTService, ManagedServiceFactory, Initializin
                 List listValue = (List) value;
                 Object firstElement = listValue.get(0);
                 if (firstElement instanceof String) {
-                    builder.withArrayClaim(key, (String[]) ((List) value).toArray());
+                    builder.withArrayClaim(key, (String[]) ((List) value).toArray(new String[((ArrayList) value).size()]));
                 }
                 else if (firstElement instanceof Integer) {
-                    builder.withArrayClaim(key, (Integer[]) ((List) value).toArray());
+                    builder.withArrayClaim(key, (Integer[]) ((List) value).toArray(new Integer[((ArrayList) value).size()]));
                 }
             }
             else if (value instanceof String) {
