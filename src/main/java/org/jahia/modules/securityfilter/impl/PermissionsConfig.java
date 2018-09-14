@@ -157,13 +157,8 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
     private static boolean tokenMatches(Permission permission) {
         TokenVerificationResult verificationResult = JWTFilter.getJWTTokenVerificationStatus();
 
-        //Ignore rule if JWT filter didn't run - TODO investigate this
-        if (verificationResult == null) {
-            return false;
-        }
-
         //Permission is not using jwt and user is not trying to access resource with jwt
-        if (permission.getScopes().isEmpty() && verificationResult.getVerificationStatusCode() == TokenVerificationResult.VerificationStatus.NOT_FOUND) {
+        if (verificationResult.getVerificationStatusCode() == TokenVerificationResult.VerificationStatus.NOT_FOUND) {
             return true;
         }
 
@@ -295,12 +290,18 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
     }
 
     private boolean hasPermissionInternal(String apiToCheck, String nodePath, Node node) throws RepositoryException {
+        //TODO make sure that permission responds correctly and there are no tautological cases
         for (Permission permission : permissions) {
+            //JWT was rejected or was sent in headers but shouldn't apply to permission
+            if (!tokenMatches(permission)) {
+                return false;
+            }
+
             if (!workspaceMatches(node, permission) || !apiMatches(apiToCheck, permission)
-                    || !pathMatches(nodePath, permission) || !nodeTypeMatches(node, permission)
-                    || !tokenMatches(permission)) {
+                    || !pathMatches(nodePath, permission) || !nodeTypeMatches(node, permission)) {
                 continue;
             }
+
             if (permission.getAccess() != null) {
                 if (permission.getAccess() == AccessType.denied) {
                     return false;
@@ -316,8 +317,6 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
                         || ((JCRNodeWrapper) node).hasPermission(permission.getRequiredPermission());
             }
         }
-        //Make sure if no permissions are matched the request is denied
-//        return false;
         return true;
     }
 

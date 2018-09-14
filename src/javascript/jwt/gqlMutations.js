@@ -32,4 +32,10 @@ const modifyToken = gql`mutation modifyToken($pathOrId: String!, $token: String!
     }
 }`;
 
-export { addToken, deleteToken, modifyToken };
+const createOrModifyToken = gql`mutation createToken($scopes: [String]!, $referers: [String], $ips:[String]) {
+    jwtToken(scopes:$scopes, referers: $referers, ips: $ips) {
+        token
+    }
+}`;
+
+export { addToken, deleteToken, modifyToken, createOrModifyToken };

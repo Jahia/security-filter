@@ -34,14 +34,13 @@
     <!--JWT-->
 
     <bean id="jwtFilter" class="org.jahia.modules.securityfilter.jwt.impl.JWTFilter">
-        <property name="description" value="Filter checks if JWT exists in header and tries to verify it"/>
         <property name="jwtConfig" ref="org.jahia.modules.securityfilter.jwt.impl.JWTConfig"/>
-        <property name="priority" value="25"/>
-        <property name="applyOnTemplateTypes" value="json,html"/>
-        <property name="applyOnConfigurations" value="page"/>
+        <property name="urlPatterns" value="/modules/graphql" />
     </bean>
 
-    <bean id="org.jahia.modules.securityfilter.jwt.impl.JWTConfig" class="org.jahia.modules.securityfilter.jwt.impl.JWTConfig" />
+    <bean id="org.jahia.modules.securityfilter.jwt.impl.JWTConfig" class="org.jahia.modules.securityfilter.jwt.impl.JWTConfig">
+        <property name="jcrTemplate" ref="jcrTemplate" />
+    </bean>
 
     <osgi:service interface="org.jahia.modules.securityfilter.jwt.JWTService" ref="org.jahia.modules.securityfilter.jwt.impl.JWTConfig" />
 

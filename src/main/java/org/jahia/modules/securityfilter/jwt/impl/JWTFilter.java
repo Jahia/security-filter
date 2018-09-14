@@ -1,20 +1,17 @@
 package org.jahia.modules.securityfilter.jwt.impl;
 
-import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import org.apache.commons.lang.StringUtils;
-import org.jahia.services.render.RenderContext;
-import org.jahia.services.render.Resource;
-import org.jahia.services.render.filter.AbstractFilter;
-import org.jahia.services.render.filter.RenderChain;
+import org.jahia.bin.filters.AbstractServletFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpHeaders;
 
+import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
 import java.util.List;
 
-public class JWTFilter extends AbstractFilter {
+public class JWTFilter extends AbstractServletFilter {
 
     private static final Logger logger = LoggerFactory.getLogger(JWTFilter.class);
 
@@ -26,10 +23,21 @@ public class JWTFilter extends AbstractFilter {
         return THREAD_LOCAL.get();
     }
 
+    public void setJwtConfig(JWTConfig jwtConfig) {
+        this.jwtConfig = jwtConfig;
+    }
+
     @Override
-    public String prepare(RenderContext renderContext, Resource resource, RenderChain chain) throws Exception {
-        HttpServletRequest request = renderContext.getRequest();
-        String authorization = request.getHeader("Authorization");
+    public void init(FilterConfig filterConfig) throws ServletException {
+        //Do nothing for now
+    }
+
+    @Override
+    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
+        System.out.println("Servlet jwt filter");
+        HttpServletRequest httpRequest = (HttpServletRequest) servletRequest;
+        String authorization = httpRequest.getHeader("Authorization");
+
         TokenVerificationResult tvr = new TokenVerificationResult();
 
         tvr.setToken(null);
@@ -43,26 +51,28 @@ public class JWTFilter extends AbstractFilter {
             try {
                 DecodedJWT decodedToken = jwtConfig.verifyToken(token);
 
+                String referer = httpRequest.getHeader("referer");
+                List<String> referers = decodedToken.getClaim("referers").asList(String.class);
+
+                String ip = httpRequest.getHeader("X-FORWARDED-FOR") != null
+                        ? httpRequest.getHeader("X-FORWARDED-FOR") : httpRequest.getRemoteAddr();
+                List<String> ips = decodedToken.getClaim("ips").asList(String.class);
+
                 //Check referers
-                String referer = request.getHeader("referer");
-                List<String> referers = decodedToken.getClaim("referer").asList(String.class);
                 if (referers != null && !referers.contains(referer)) {
                     tvr.setVerificationStatusCode(TokenVerificationResult.VerificationStatus.REJECTED);
                     tvr.setMessage("Incorrect referer in token");
-                    return null;
                 }
                 //Check IP
-                String ip = request.getHeader("X-FORWARDED-FOR") != null ? request.getHeader("X-FORWARDED-FOR") : request.getRemoteAddr();
-                List<String> ips = decodedToken.getClaim("ip").asList(String.class);
-                if (ips != null && !ips.contains(ip)) {
+                else if (ips != null && !ips.contains(ip)) {
                     tvr.setVerificationStatusCode(TokenVerificationResult.VerificationStatus.REJECTED);
                     tvr.setMessage("Your IP did not match any of the permitted IPs");
-                    return null;
                 }
-
-                tvr.setToken(decodedToken);
-                tvr.setVerificationStatusCode(TokenVerificationResult.VerificationStatus.VERIFIED);
-                tvr.setMessage("Token verified");
+                else {
+                    tvr.setToken(decodedToken);
+                    tvr.setVerificationStatusCode(TokenVerificationResult.VerificationStatus.VERIFIED);
+                    tvr.setMessage("Token verified");
+                }
             }
             catch (Exception e) {
                 tvr.setVerificationStatusCode(TokenVerificationResult.VerificationStatus.REJECTED);
@@ -70,10 +80,12 @@ public class JWTFilter extends AbstractFilter {
                 logger.error("Failed to verify JWT token: {}", e.getMessage());
             }
         }
-        return null;
+
+        filterChain.doFilter(httpRequest, servletResponse);
     }
 
-    public void setJwtConfig(JWTConfig jwtConfig) {
-        this.jwtConfig = jwtConfig;
+    @Override
+    public void destroy() {
+        //Do nothing for now
     }
 }

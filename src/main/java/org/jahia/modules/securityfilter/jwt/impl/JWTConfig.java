@@ -7,8 +7,16 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.auth0.jwt.interfaces.Verification;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang.StringUtils;
 import org.jahia.modules.securityfilter.jwt.JWTService;
+import org.jahia.services.content.JCRCallback;
+import org.jahia.services.content.JCRNodeWrapper;
+import org.jahia.services.content.JCRSessionWrapper;
+import org.jahia.services.content.JCRTemplate;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedServiceFactory;
 import org.slf4j.Logger;
@@ -16,6 +24,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.apache.jackrabbit.util.ISO8601;
 
+import javax.jcr.RepositoryException;
+import java.io.IOException;
 import java.util.*;
 
 public class JWTConfig implements JWTService, ManagedServiceFactory, InitializingBean {
@@ -23,30 +33,83 @@ public class JWTConfig implements JWTService, ManagedServiceFactory, Initializin
 
     //Configuration as defined by the config file. Includes secret, algorithm etc.
     private Map<String, String> tokenConfig = new HashMap<String, String>();
-    private Map<String, Object> claims = new HashMap<String, Object>();
     private String token;
+    //TODO remove hard coding
+    private final String path = "/modules/security-filter/1.0.2-SNAPSHOT/templates/contents/security-filter-jwt/tokens";
+    private JCRTemplate jcrTemplate;
 
     public JWTConfig() {
         super();
     }
 
     @Override
-    public String createToken(Map<String, Object> claims) {
-        this.claims = claims;
+    public String createToken(final Map<String, Object> claims) throws RepositoryException {
         JWTCreator.Builder builder = JWT.create();
         addConfigToToken(builder);
-        addPrivateClaimsToToken(this.claims, builder);
+        addPrivateClaimsToToken(claims, builder);
         token = signToken(builder);
-        return token;
+
+        //Store token in JCR
+        boolean result = (boolean) jcrTemplate.doExecuteWithSystemSession(new JCRCallback<Object>() {
+            @Override
+            public Boolean doInJCR(JCRSessionWrapper jcrSessionWrapper) throws RepositoryException {
+                try {
+                    String jsonClaims = new ObjectMapper().writeValueAsString(claims);
+                    JCRNodeWrapper tokens = jcrSessionWrapper.getNode(path);
+                    JCRNodeWrapper tok;
+                    if (tokens.hasNode("jwt-token")) {
+                        tok = tokens.getNode("jwt-token");
+                    }
+                    else {
+                        tok = tokens.addNode("jwt-token", "sfnt:token");
+                    }
+                    tok.setProperty("claims", jsonClaims);
+                    tok.setProperty("token", token);
+
+                    jcrSessionWrapper.save();
+                } catch (JsonProcessingException e) {
+                    logger.error("Failed to save claims in JCR: {}", e.getMessage());
+                    return false;
+                }
+                catch (RepositoryException e) {
+                    logger.error("Failed to save token in JCR: {}", e.getMessage());
+                    return false;
+                }
+                return true;
+            }
+        });
+
+        if (result) {
+            return token;
+        }
+        return null;
     }
 
     @Override
-    public DecodedJWT verifyToken(String token) throws JWTVerificationException {
+    public DecodedJWT verifyToken(String token) throws JWTVerificationException, RepositoryException {
         Verification verification = signedVerification();
         addConfigToVerification(verification);
-        addPrivateClaimsToVerification(this.claims, verification);
-        JWTVerifier verifier = verification.build(); //Reusable verifier instance
-        return verifier.verify(token);
+        Map<String, Object> claims = jcrTemplate.doExecuteWithSystemSession(new JCRCallback<Map<String, Object>>() {
+            @Override
+            public Map<String, Object> doInJCR(JCRSessionWrapper jcrSessionWrapper) throws RepositoryException {
+                JCRNodeWrapper token = jcrSessionWrapper.getNode(path + "/jwt-token");
+                String jsonClaims = token.getPropertyAsString("claims");
+                try {
+                    return new ObjectMapper().readValue(jsonClaims, new TypeReference<Map<String, Object>>() {});
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    logger.error("Failed to read claims from JCR: {}", e.getMessage());
+                }
+                return null;
+            }
+        });
+
+        if (claims != null) {
+            addPrivateClaimsToVerification(claims, verification);
+            JWTVerifier verifier = verification.build(); //Reusable verifier instance
+            return verifier.verify(token);
+        }
+        return null;
     }
 
     @Override
@@ -70,7 +133,6 @@ public class JWTConfig implements JWTService, ManagedServiceFactory, Initializin
             }
             logger.info("JWT configuration reloaded");
         }
-        littleTest();
     }
 
     @Override
@@ -177,10 +239,10 @@ public class JWTConfig implements JWTService, ManagedServiceFactory, Initializin
                 List listValue = (List) value;
                 Object firstElement = listValue.get(0);
                 if (firstElement instanceof String) {
-                    verification.withArrayClaim(key, (String[]) ((List) value).toArray());
+                    verification.withArrayClaim(key, (String[]) ((List) value).toArray(new String[((ArrayList) value).size()]));
                 }
                 else if (firstElement instanceof Integer) {
-                    verification.withArrayClaim(key, (Integer[]) ((List) value).toArray());
+                    verification.withArrayClaim(key, (Integer[]) ((List) value).toArray(new Integer[((ArrayList) value).size()]));
                 }
             }
             else if (value instanceof String) {
@@ -224,39 +286,43 @@ public class JWTConfig implements JWTService, ManagedServiceFactory, Initializin
         return null;
     }
 
-    private void littleTest() {
-        Map<String, Object> claims = new HashMap<String, Object>();
-        claims.put("stringList", Arrays.asList("value1", "value2"));
-        claims.put("scopes", Arrays.asList("scope1", "scope2"));
-        //claims.put("referer", Arrays.asList("https://boomboom.com"));
-        claims.put("integerList", Arrays.asList(1, 2));
-        claims.put("integer", 1);
-        claims.put("double", 2.55);
-        claims.put("long", 2.55);
-        claims.put("string", "hello");
-        createToken(claims);
+//    private void littleTest() {
+//        Map<String, Object> claims = new HashMap<String, Object>();
+//        claims.put("stringList", Arrays.asList("value1", "value2"));
+//        claims.put("scopes", Arrays.asList("scope1", "scope2"));
+//        //claims.put("referer", Arrays.asList("https://boomboom.com"));
+//        claims.put("integerList", Arrays.asList(1, 2));
+//        claims.put("integer", 1);
+//        claims.put("double", 2.55);
+//        claims.put("long", 2.55);
+//        claims.put("string", "hello");
+//        //createToken(claims);
+//
+//        logger.info("*********************** Start little test **************************");
+//        logger.info(token);
+//
+//        try {
+//            DecodedJWT t = verifyToken(token);
+//            List stringList = t.getClaim("stringList").as(List.class);
+//            logger.info("Verified correct token");
+//        }
+//        catch (JWTVerificationException e) {
+//            logger.info("Failed to verify correct token");
+//            logger.error(e.getMessage());
+//        }
+//
+//        try {
+//            String tok = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.AbIJTDMFc7yUa5MhvcP03nJPyCPzZtQcGEp-zWfOkEE";
+//            DecodedJWT t = verifyToken(tok);
+//            logger.info("Verified incorrect token");
+//        }
+//        catch (JWTVerificationException e) {
+//            logger.info("Failed to verify incorrect token");
+//            logger.error(e.getMessage());
+//        }
+//    }
 
-        logger.info("*********************** Start little test **************************");
-        logger.info(token);
-
-        try {
-            DecodedJWT t = verifyToken(token);
-            List stringList = t.getClaim("stringList").as(List.class);
-            logger.info("Verified correct token");
-        }
-        catch (JWTVerificationException e) {
-            logger.info("Failed to verify correct token");
-            logger.error(e.getMessage());
-        }
-
-        try {
-            String tok = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.AbIJTDMFc7yUa5MhvcP03nJPyCPzZtQcGEp-zWfOkEE";
-            DecodedJWT t = verifyToken(tok);
-            logger.info("Verified incorrect token");
-        }
-        catch (JWTVerificationException e) {
-            logger.info("Failed to verify incorrect token");
-            logger.error(e.getMessage());
-        }
+    public void setJcrTemplate(JCRTemplate jcrTemplate) {
+        this.jcrTemplate = jcrTemplate;
     }
 }
