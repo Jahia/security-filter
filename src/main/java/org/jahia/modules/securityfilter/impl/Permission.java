@@ -50,7 +50,7 @@ import java.util.regex.Pattern;
 /**
  * Permission configuration entry for API access
  *
- * Will check the requiredPermission if all conditions api / workspace / pathPattern / nodeType matches
+ * Will check the requiredPermission if all conditions api / workspace / pathPattern / scopes / nodeType matches
  */
 public class Permission {
     public static enum AccessType {

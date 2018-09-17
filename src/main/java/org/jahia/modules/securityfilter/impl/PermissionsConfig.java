@@ -157,10 +157,13 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
     private static boolean tokenMatches(Permission permission) {
         TokenVerificationResult verificationResult = JWTFilter.getJWTTokenVerificationStatus();
 
-        //Permission is not using jwt and user is not trying to access resource with jwt
-        if (verificationResult.getVerificationStatusCode() == TokenVerificationResult.VerificationStatus.NOT_FOUND) {
+        if (permission.getScopes().isEmpty()) {
             return true;
         }
+
+//        if (!permission.getScopes().isEmpty() && verificationResult.getVerificationStatusCode() == TokenVerificationResult.VerificationStatus.NOT_FOUND) {
+//            return true;
+//        }
 
         //Failed to verify token signature
         if (verificationResult.getVerificationStatusCode() == TokenVerificationResult.VerificationStatus.REJECTED) {
@@ -290,15 +293,23 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
     }
 
     private boolean hasPermissionInternal(String apiToCheck, String nodePath, Node node) throws RepositoryException {
-        //TODO make sure that permission responds correctly and there are no tautological cases
+
+        boolean tokenPermissionPass = false;
         for (Permission permission : permissions) {
-            //JWT was rejected or was sent in headers but shouldn't apply to permission
-            if (!tokenMatches(permission)) {
-                return false;
+            if (tokenMatches(permission)) {
+                tokenPermissionPass = true;
             }
+        }
+
+        if (!tokenPermissionPass) return false;
+
+        for (Permission permission : permissions) {
+
+            if (!tokenMatches(permission)) return false;
 
             if (!workspaceMatches(node, permission) || !apiMatches(apiToCheck, permission)
-                    || !pathMatches(nodePath, permission) || !nodeTypeMatches(node, permission)) {
+                    || !pathMatches(nodePath, permission) || !nodeTypeMatches(node, permission)
+                    || !tokenMatches(permission)) {
                 continue;
             }
 
