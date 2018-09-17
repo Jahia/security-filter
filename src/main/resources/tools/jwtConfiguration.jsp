@@ -30,6 +30,7 @@
 <script type="text/javascript">
     var contextualData ={};
     contextualData['moduleVersion'] = '${moduleVersion}';
+    contextualData['context'] = '${url.context}';
 
     window.reactRenderJWTApp('${targetId}', "${currentNode.identifier}", contextualData);
 </script>

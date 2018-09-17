@@ -26,7 +26,7 @@ function App(props) {
                     </Typography>
                 </Toolbar>
             </AppBar>
-            <ApolloProvider client={client({contextPath: dxContext.contextPath})}>
+            <ApolloProvider client={client({contextPath: dxContext.context})}>
                 <DxContext.Provider value={dxContext}>
                     <TokenManager dxContext={dxContext}/>
                 </DxContext.Provider>
