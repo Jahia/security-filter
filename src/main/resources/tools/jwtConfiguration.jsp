@@ -16,6 +16,7 @@
 
 <c:set var="moduleVersion" value="${script.view.moduleVersion}"/>
 <c:set var="moduleVersion" value="1.0.2-SNAPSHOT"/>
+<c:set var="URI" value="${pageContext.request.requestURI}" />
 
 <c:set var="targetId" value="reactComponent${fn:replace(currentNode.identifier,'-','_')}"/>
 
@@ -30,7 +31,7 @@
 <script type="text/javascript">
     var contextualData ={};
     contextualData['moduleVersion'] = '${moduleVersion}';
-    contextualData['context'] = '${url.context}';
+    contextualData['context'] = '${fn:substringBefore(URI, '/modules')}';
 
     window.reactRenderJWTApp('${targetId}', "${currentNode.identifier}", contextualData);
 </script>
