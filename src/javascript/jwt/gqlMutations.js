@@ -13,10 +13,8 @@ const addToken = gql`mutation addToken($pathOrId: String!, $tokenName: String!, 
   }
 }`;
 
-const deleteToken = gql`mutation deleteToken($pathOrId: String!) {
-    jcr {
-        deleteNode(pathOrId:$pathOrId)
-  }
+const deleteToken = gql`mutation deleteToken($path: String!) {
+    deleteJWTToken (path:$path) 
 }`;
 
 const modifyToken = gql`mutation modifyToken($pathOrId: String!, $token: String!, $claims: String!) {

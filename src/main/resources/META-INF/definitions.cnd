@@ -8,5 +8,4 @@
  + * (sfnt:token) = sfnt:token
 
 [sfnt:token] > jnt:content
- - token (string)
  - claims (string)

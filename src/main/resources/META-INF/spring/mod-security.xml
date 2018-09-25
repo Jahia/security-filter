@@ -35,7 +35,7 @@
 
     <bean id="jwtFilter" class="org.jahia.modules.securityfilter.jwt.impl.JWTFilter">
         <property name="jwtConfig" ref="org.jahia.modules.securityfilter.jwt.impl.JWTConfig"/>
-        <property name="urlPatterns" value="/modules/graphql" />
+        <property name="urlPatterns" value="/" />
     </bean>
 
     <bean id="org.jahia.modules.securityfilter.jwt.impl.JWTConfig" class="org.jahia.modules.securityfilter.jwt.impl.JWTConfig">

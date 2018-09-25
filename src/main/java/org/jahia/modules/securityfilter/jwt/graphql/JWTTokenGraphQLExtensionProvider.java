@@ -17,7 +17,8 @@ public class JWTTokenGraphQLExtensionProvider implements DXGraphQLExtensionsProv
     @Override
     public Collection<Class<?>> getExtensions() {
         List<Class<?>> extensions = new ArrayList<>();
-        extensions.add(org.jahia.modules.securityfilter.jwt.graphql.generateJWTToken.QueryExtension.class);
+        extensions.add(org.jahia.modules.securityfilter.jwt.graphql.generateJWTToken.mutation.QueryExtension.class);
+        extensions.add(org.jahia.modules.securityfilter.jwt.graphql.generateJWTToken.query.QueryExtension.class);
         return extensions;
     }
 }

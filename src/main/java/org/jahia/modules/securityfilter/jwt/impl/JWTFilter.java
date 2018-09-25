@@ -34,7 +34,6 @@ public class JWTFilter extends AbstractServletFilter {
 
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
-        System.out.println("Servlet jwt filter");
         HttpServletRequest httpRequest = (HttpServletRequest) servletRequest;
         String authorization = httpRequest.getHeader("Authorization");
 

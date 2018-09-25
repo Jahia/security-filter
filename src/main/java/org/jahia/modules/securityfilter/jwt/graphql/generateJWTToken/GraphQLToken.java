@@ -7,9 +7,11 @@ import graphql.annotations.annotationTypes.GraphQLName;
 public class GraphQLToken {
 
     private String token;
+    private String claims;
 
-    public GraphQLToken(String token) {
+    public GraphQLToken(String token, String claims) {
         this.token = token;
+        this.claims = claims;
     }
 
     @GraphQLField
@@ -17,4 +19,8 @@ public class GraphQLToken {
         return token;
     }
 
+    @GraphQLField
+    public String getClaims() {
+        return claims;
+    }
 }

@@ -7,16 +7,14 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.auth0.jwt.interfaces.Verification;
-import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang.StringUtils;
+import org.jahia.exceptions.JahiaUnauthorizedException;
 import org.jahia.modules.securityfilter.jwt.JWTService;
-import org.jahia.services.content.JCRCallback;
-import org.jahia.services.content.JCRNodeWrapper;
-import org.jahia.services.content.JCRSessionWrapper;
-import org.jahia.services.content.JCRTemplate;
+import org.jahia.modules.securityfilter.jwt.graphql.generateJWTToken.GraphQLToken;
+import org.jahia.services.content.*;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedServiceFactory;
 import org.slf4j.Logger;
@@ -44,6 +42,9 @@ public class JWTConfig implements JWTService, ManagedServiceFactory, Initializin
 
     @Override
     public String createToken(final Map<String, Object> claims) throws RepositoryException {
+        if (!isAuthorized()) {
+            throw new JahiaUnauthorizedException();
+        }
         JWTCreator.Builder builder = JWT.create();
         addConfigToToken(builder);
         addPrivateClaimsToToken(claims, builder);
@@ -64,7 +65,6 @@ public class JWTConfig implements JWTService, ManagedServiceFactory, Initializin
                         tok = tokens.addNode("jwt-token", "sfnt:token");
                     }
                     tok.setProperty("claims", jsonClaims);
-                    tok.setProperty("token", token);
 
                     jcrSessionWrapper.save();
                 } catch (JsonProcessingException e) {
@@ -89,20 +89,7 @@ public class JWTConfig implements JWTService, ManagedServiceFactory, Initializin
     public DecodedJWT verifyToken(String token) throws JWTVerificationException, RepositoryException {
         Verification verification = signedVerification();
         addConfigToVerification(verification);
-        Map<String, Object> claims = jcrTemplate.doExecuteWithSystemSession(new JCRCallback<Map<String, Object>>() {
-            @Override
-            public Map<String, Object> doInJCR(JCRSessionWrapper jcrSessionWrapper) throws RepositoryException {
-                JCRNodeWrapper token = jcrSessionWrapper.getNode(path + "/jwt-token");
-                String jsonClaims = token.getPropertyAsString("claims");
-                try {
-                    return new ObjectMapper().readValue(jsonClaims, new TypeReference<Map<String, Object>>() {});
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    logger.error("Failed to read claims from JCR: {}", e.getMessage());
-                }
-                return null;
-            }
-        });
+        Map<String, Object> claims = getClaims(this.path);
 
         if (claims != null) {
             addPrivateClaimsToVerification(claims, verification);
@@ -143,6 +130,46 @@ public class JWTConfig implements JWTService, ManagedServiceFactory, Initializin
     @Override
     public void afterPropertiesSet() throws Exception {
 
+    }
+
+    @Override
+    public GraphQLToken getExistingToken(String path) throws RepositoryException, JsonProcessingException {
+        Map<String, Object> claims = getClaims(path);
+        if (claims == null) {
+            return null;
+        }
+        JWTCreator.Builder builder = JWT.create();
+        addConfigToToken(builder);
+        addPrivateClaimsToToken(claims, builder);
+        return new GraphQLToken(signToken(builder), new ObjectMapper().writeValueAsString(claims));
+    }
+
+    @Override
+    public boolean deleteJWTToken(final String path) {
+        if (!isAuthorized()) {
+            throw new JahiaUnauthorizedException();
+        }
+        try {
+            return JCRTemplate.getInstance().doExecuteWithSystemSession(new JCRCallback<Boolean>() {
+                @Override
+                public Boolean doInJCR(JCRSessionWrapper jcrSessionWrapper) throws RepositoryException {
+                    if (jcrSessionWrapper.nodeExists(path)) {
+                        jcrSessionWrapper.getNode(path).remove();
+                        jcrSessionWrapper.save();
+                        return true;
+                    }
+                    return false;
+                }
+            });
+        } catch(RepositoryException ex) {
+            logger.error("Failed to delete node", ex);
+            return false;
+        }
+    }
+
+    @Override
+    public boolean isAuthorized() {
+        return JCRSessionFactory.getInstance().getCurrentUser().isRoot();
     }
 
     private void addConfigToToken(JWTCreator.Builder builder) {
@@ -284,6 +311,27 @@ public class JWTConfig implements JWTService, ManagedServiceFactory, Initializin
             case "HMAC512" : return JWT.require(Algorithm.HMAC512(tokenConfig.get("secret")));
         }
         return null;
+    }
+
+    private Map<String, Object> getClaims(final String path) throws RepositoryException {
+        Map<String, Object> claims = jcrTemplate.doExecuteWithSystemSession(new JCRCallback<Map<String, Object>>() {
+            @Override
+            public Map<String, Object> doInJCR(JCRSessionWrapper jcrSessionWrapper) throws RepositoryException {
+                if (jcrSessionWrapper.nodeExists(path + "/jwt-token")) {
+                    JCRNodeWrapper token = jcrSessionWrapper.getNode(path + "/jwt-token");
+                    String jsonClaims = token.getPropertyAsString("claims");
+                    try {
+                        return new ObjectMapper().readValue(jsonClaims, new TypeReference<Map<String, Object>>() {
+                        });
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        logger.error("Failed to read claims from JCR: {}", e.getMessage());
+                    }
+                }
+                return null;
+            }
+        });
+        return claims;
     }
 
 //    private void littleTest() {
