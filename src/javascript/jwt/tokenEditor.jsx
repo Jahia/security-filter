@@ -9,7 +9,6 @@ import DialogTitle from '@material-ui/core/DialogTitle';
 import { Mutation } from 'react-apollo';
 
 import { withStyles } from '@material-ui/core/styles';
-import {getTokensQuery} from "./gqlQueries";
 import {createOrModifyToken} from "./gqlMutations";
 
 const styles = theme => ({
@@ -38,7 +37,7 @@ class TokenEditor extends React.Component {
 
 
     render() {
-        const { classes, open, close, scopes, referers, ips } = this.props;
+        const { classes, open, close, scopes, referer, ips } = this.props;
 
         return (
                 <Dialog
@@ -49,8 +48,8 @@ class TokenEditor extends React.Component {
                     <DialogTitle id="alert-dialog-title">{"Edit Token Parameters"}</DialogTitle>
                     <DialogContent>
                         <DialogContentText id="alert-dialog-description">
-                            Enter comma separated parameter values below. Leave empty to ignore parameter. You need at least
-                            one scope value.
+                            Enter comma separated parameter values below. Leave empty to ignore parameter. Refer will match itself and any subpath
+                            You need at least one scope value.
                         </DialogContentText>
                         <form ref={ this.form } className={classes.container} noValidate autoComplete="off">
                             <TextField
@@ -64,13 +63,13 @@ class TokenEditor extends React.Component {
                                 margin="normal"
                             />
                             <TextField
-                                id="referers"
-                                label="Referers"
+                                id="referer"
+                                label="Referer"
                                 multiline
                                 rowsMax="4"
                                 className={classes.textField}
-                                defaultValue={ referers }
-                                onChange={(e) => this.handleChange(e, "referers")}
+                                defaultValue={ referer }
+                                onChange={(e) => this.handleChange(e, "referer")}
                                 margin="normal"
                             />
                             <TextField
@@ -102,22 +101,26 @@ class TokenEditor extends React.Component {
     }
 
     persistToken(mutation) {
+        let {onTokenCreation} = this.props;
         const values = {
             scopes: this.props.scopes,
-            referers: this.props.referers,
+            referer: this.props.referer,
             ips: this.props.ips
         };
         if (this.state.scopes !== undefined) {
             values.scopes = this.state.scopes
         }
-        if (this.state.referers !== undefined) {
-            values.referers = this.state.referers
+        if (this.state.referer !== undefined) {
+            values.referer = this.state.referer
         }
         if (this.state.ips !== undefined) {
             values.ips = this.state.ips
         }
 
         for (const prop of Object.keys(values)) {
+            if (prop === 'referer') {
+                continue;
+            }
             if (values[prop] === "" || values[prop] === undefined) {
                 delete values[prop];
             }
@@ -128,18 +131,17 @@ class TokenEditor extends React.Component {
             }
         }
 
-        mutation({variables: { ...values }});
+        mutation({variables: { ...values }}).then((res) => {
+            if (res.data && res.data.jwtToken){
+                onTokenCreation(res.data.jwtToken);
+            }
+        });
         this.reset();
     }
 
     saveTokenButton() {
-        const path = `/modules/security-filter/1.0.2-SNAPSHOT/templates/contents/security-filter-jwt/tokens`;
         return <Mutation
-            mutation={ createOrModifyToken }
-            refetchQueries={[{
-                query: getTokensQuery,
-                variables: {path: path}
-            }]}>
+            mutation={ createOrModifyToken }>
             {(createOrModifyToken) => {
                 return <Button onClick={ () => this.persistToken(createOrModifyToken) } color="primary" autoFocus>
                     Save

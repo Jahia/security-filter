@@ -23,13 +23,13 @@ public class QueryExtension {
     @GraphQLField
     @GraphQLDescription("")
     public static GraphQLToken jwtToken (@GraphQLNonNull @GraphQLName("scopes") @GraphQLDescription("") List<String> scopes,
-                                         @GraphQLName("referers") @GraphQLDescription("") List<String> referers,
+                                         @GraphQLName("referer") @GraphQLDescription("") String referer,
                                          @GraphQLName("ips") @GraphQLDescription("") List<String> ips) throws RepositoryException {
         JWTService jwtService = BundleUtils.getOsgiService(JWTService.class, null);
         Map<String, Object> claims = new HashMap<>();
         claims.put("scopes", scopes);
-        if (referers != null) {
-            claims.put("referers", referers);
+        if (referer != null) {
+            claims.put("referer", referer);
         }
         if (ips != null) {
             claims.put("ips", ips);
@@ -40,12 +40,5 @@ public class QueryExtension {
             logger.error("Cannot convert object to json", ex);
         }
         return null;
-    }
-
-    @GraphQLField
-    @GraphQLDescription("Deletes the token specified by the given path")
-    public static boolean deleteJWTToken (@GraphQLNonNull @GraphQLName("path") @GraphQLDescription("Path of the node to be deleted") String path) {
-        JWTService jwtService = BundleUtils.getOsgiService(JWTService.class, null);
-        return jwtService.deleteJWTToken(path);
     }
 }

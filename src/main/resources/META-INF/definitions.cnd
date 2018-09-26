@@ -3,9 +3,3 @@
 <jmix = 'http://www.jahia.org/jahia/mix/1.0'>
 <jnt = 'http://www.jahia.org/jahia/nt/1.0'>
 <mix = 'http://www.jcp.org/jcr/mix/1.0'>
-
-[sfnt:tokens] > jnt:content, jmix:droppableContent, jmix:hiddenType
- + * (sfnt:token) = sfnt:token
-
-[sfnt:token] > jnt:content
- - claims (string)

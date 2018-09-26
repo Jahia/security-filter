@@ -14,7 +14,6 @@
                     <files jcr:primaryType="jnt:folder"/>
                     <contents jcr:primaryType="jnt:contentFolder">
                         <security-filter-jwt jcr:primaryType="jnt:contentFolder">
-                            <tokens jcr:primaryType="sfnt:tokens"/>
                         </security-filter-jwt>
                     </contents>
                 </templates>

@@ -10,8 +10,5 @@ import java.util.Map;
 
 public interface JWTService {
     String createToken(Map<String, Object> claims) throws RepositoryException;
-    GraphQLToken getExistingToken(String path) throws RepositoryException, JsonProcessingException;
-    boolean deleteJWTToken(final String path);
-    boolean isAuthorized();
     DecodedJWT verifyToken(String token) throws JWTVerificationException, RepositoryException;
 }

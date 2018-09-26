@@ -35,12 +35,10 @@
 
     <bean id="jwtFilter" class="org.jahia.modules.securityfilter.jwt.impl.JWTFilter">
         <property name="jwtConfig" ref="org.jahia.modules.securityfilter.jwt.impl.JWTConfig"/>
-        <property name="urlPatterns" value="/" />
+        <property name="urlPatterns" value="/*" />
     </bean>
 
-    <bean id="org.jahia.modules.securityfilter.jwt.impl.JWTConfig" class="org.jahia.modules.securityfilter.jwt.impl.JWTConfig">
-        <property name="jcrTemplate" ref="jcrTemplate" />
-    </bean>
+    <bean id="org.jahia.modules.securityfilter.jwt.impl.JWTConfig" class="org.jahia.modules.securityfilter.jwt.impl.JWTConfig"/>
 
     <osgi:service interface="org.jahia.modules.securityfilter.jwt.JWTService" ref="org.jahia.modules.securityfilter.jwt.impl.JWTConfig" />
 

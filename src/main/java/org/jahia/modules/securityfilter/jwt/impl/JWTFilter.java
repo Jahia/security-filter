@@ -10,6 +10,7 @@ import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class JWTFilter extends AbstractServletFilter {
 
@@ -51,14 +52,14 @@ public class JWTFilter extends AbstractServletFilter {
                 DecodedJWT decodedToken = jwtConfig.verifyToken(token);
 
                 String referer = httpRequest.getHeader("referer");
-                List<String> referers = decodedToken.getClaim("referers").asList(String.class);
-
+                String claimReferer = decodedToken.getClaim("referer").asString();
+                //return ;
                 String ip = httpRequest.getHeader("X-FORWARDED-FOR") != null
                         ? httpRequest.getHeader("X-FORWARDED-FOR") : httpRequest.getRemoteAddr();
                 List<String> ips = decodedToken.getClaim("ips").asList(String.class);
 
                 //Check referers
-                if (referers != null && !referers.contains(referer)) {
+                if (claimReferer != null && !Pattern.compile(claimReferer + ".*").matcher(referer).find()) {
                     tvr.setVerificationStatusCode(TokenVerificationResult.VerificationStatus.REJECTED);
                     tvr.setMessage("Incorrect referer in token");
                 }
