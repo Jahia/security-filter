@@ -1,22 +1,28 @@
 package org.jahia.modules.securityfilter.jwt.graphql.generateJWTToken;
 
+import com.auth0.jwt.interfaces.DecodedJWT;
 import graphql.annotations.annotationTypes.GraphQLField;
 import graphql.annotations.annotationTypes.GraphQLName;
 
-@GraphQLName("jwt_token")
+@GraphQLName("JWTToken")
 public class GraphQLToken {
 
-    private String token;
+    private DecodedJWT token;
     private String claims;
 
-    public GraphQLToken(String token, String claims) {
+    public GraphQLToken(DecodedJWT token, String claims) {
         this.token = token;
         this.claims = claims;
     }
 
     @GraphQLField
+    public String getId() {
+        return token.getId();
+    }
+
+    @GraphQLField
     public String getToken() {
-        return token;
+        return token.getToken();
     }
 
     @GraphQLField

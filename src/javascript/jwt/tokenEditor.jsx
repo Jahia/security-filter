@@ -118,9 +118,6 @@ class TokenEditor extends React.Component {
         }
 
         for (const prop of Object.keys(values)) {
-            if (prop === 'referer') {
-                continue;
-            }
             if (values[prop] === "" || values[prop] === undefined) {
                 delete values[prop];
             }

@@ -85,7 +85,7 @@ class TokenManager extends React.Component {
             const claims = JSON.parse(claimsJson);
             return {
                 scopes: claims.scopes.join(","),
-                referer: claims.referer,
+                referer: claims.referer ? claims.referer.join(",") : "",
                 ips: claims.ips ? claims.ips.join(",") : ""
             }
         }

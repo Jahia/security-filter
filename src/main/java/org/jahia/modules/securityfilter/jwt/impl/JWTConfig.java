@@ -8,7 +8,7 @@ import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.auth0.jwt.interfaces.Verification;
 import org.apache.commons.lang.StringUtils;
-import org.jahia.modules.securityfilter.jwt.JWTService;
+import org.jahia.modules.securityfilter.JWTService;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedServiceFactory;
 import org.slf4j.Logger;
@@ -33,8 +33,11 @@ public class JWTConfig implements JWTService, ManagedServiceFactory, Initializin
         JWTCreator.Builder builder = JWT.create();
         //Generate random uuid for jti claim field
         builder.withJWTId(UUID.randomUUID().toString());
+        Date now = new Date();
+        builder.withIssuedAt(now);
+
         //Add public claims to token builder
-        addConfigToToken(builder);
+        addConfigToToken(builder, now);
         //Add private claims to token builder
         addPrivateClaimsToToken(claims, builder);
         return signToken(builder);
@@ -81,7 +84,7 @@ public class JWTConfig implements JWTService, ManagedServiceFactory, Initializin
 
     }
 
-    private void addConfigToToken(JWTCreator.Builder builder) {
+    private void addConfigToToken(JWTCreator.Builder builder, Date now) {
         Set<String> keys = tokenConfig.keySet();
         for (String key : keys) {
             switch (key) {
@@ -100,9 +103,6 @@ public class JWTConfig implements JWTService, ManagedServiceFactory, Initializin
                 case "notBefore" :
                 case "nbf" : builder.withNotBefore(ISO8601.parse(tokenConfig.get(key)).getTime());
                 break;
-                case "issuedAt" :
-                case "iat" : builder.withIssuedAt(ISO8601.parse(tokenConfig.get(key)).getTime());
-                break;
             }
         }
     }
@@ -111,17 +111,8 @@ public class JWTConfig implements JWTService, ManagedServiceFactory, Initializin
         Set<String> keys = tokenConfig.keySet();
         for (String key : keys) {
             switch (key) {
-                case "issuer" :
-                case "iss" : verification.withIssuer(tokenConfig.get(key));
-                    break;
-                case "subject" :
-                case "sub" : verification.withSubject(tokenConfig.get(key));
-                    break;
                 case "audience" :
                 case "aud" : verification.withAudience(tokenConfig.get(key));
-                    break;
-                case "jwtId" :
-                case "jti" : verification.withJWTId(tokenConfig.get(key));
                     break;
             }
         }

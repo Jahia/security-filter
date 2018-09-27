@@ -1,4 +1,4 @@
-package org.jahia.modules.securityfilter.jwt;
+package org.jahia.modules.securityfilter;
 
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;

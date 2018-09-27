@@ -40,7 +40,7 @@
 
     <bean id="org.jahia.modules.securityfilter.jwt.impl.JWTConfig" class="org.jahia.modules.securityfilter.jwt.impl.JWTConfig"/>
 
-    <osgi:service interface="org.jahia.modules.securityfilter.jwt.JWTService" ref="org.jahia.modules.securityfilter.jwt.impl.JWTConfig" />
+    <osgi:service interface="org.jahia.modules.securityfilter.JWTService" ref="org.jahia.modules.securityfilter.jwt.impl.JWTConfig" />
 
     <osgi:service interface="org.osgi.service.cm.ManagedServiceFactory" ref="org.jahia.modules.securityfilter.jwt.impl.JWTConfig">
         <osgi:service-properties>

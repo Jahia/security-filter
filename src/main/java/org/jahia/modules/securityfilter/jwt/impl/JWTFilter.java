@@ -52,19 +52,19 @@ public class JWTFilter extends AbstractServletFilter {
                 DecodedJWT decodedToken = jwtConfig.verifyToken(token);
 
                 String referer = httpRequest.getHeader("referer");
-                String claimReferer = decodedToken.getClaim("referer").asString();
+                List<String> claimReferers =decodedToken.getClaim("referer").asList(String.class);
                 //return ;
                 String ip = httpRequest.getHeader("X-FORWARDED-FOR") != null
                         ? httpRequest.getHeader("X-FORWARDED-FOR") : httpRequest.getRemoteAddr();
                 List<String> ips = decodedToken.getClaim("ips").asList(String.class);
 
                 //Check referers
-                if (claimReferer != null && !Pattern.compile(claimReferer + ".*").matcher(referer).find()) {
+                if (claimReferers != null && !claimReferers.isEmpty() && !checkReferer(claimReferers, referer)) {
                     tvr.setVerificationStatusCode(TokenVerificationResult.VerificationStatus.REJECTED);
                     tvr.setMessage("Incorrect referer in token");
                 }
                 //Check IP
-                else if (ips != null && !ips.contains(ip)) {
+                else if (ips != null && !ips.isEmpty() && !ips.contains(ip)) {
                     tvr.setVerificationStatusCode(TokenVerificationResult.VerificationStatus.REJECTED);
                     tvr.setMessage("Your IP did not match any of the permitted IPs");
                 }
@@ -82,6 +82,17 @@ public class JWTFilter extends AbstractServletFilter {
         }
 
         filterChain.doFilter(httpRequest, servletResponse);
+
+        THREAD_LOCAL.set(null);
+    }
+
+    private boolean checkReferer(List<String> claimReferers, String referer) {
+        for (String claimReferer : claimReferers) {
+            if (referer.startsWith(claimReferer)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override

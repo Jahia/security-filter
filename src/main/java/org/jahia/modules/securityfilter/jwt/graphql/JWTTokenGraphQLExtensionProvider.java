@@ -1,6 +1,7 @@
 package org.jahia.modules.securityfilter.jwt.graphql;
 
 import org.jahia.modules.graphql.provider.dxm.DXGraphQLExtensionsProvider;
+import org.jahia.modules.securityfilter.jwt.graphql.generateJWTToken.mutation.MutationExtension;
 import org.osgi.service.component.annotations.Component;
 
 import java.util.ArrayList;
@@ -17,7 +18,7 @@ public class JWTTokenGraphQLExtensionProvider implements DXGraphQLExtensionsProv
     @Override
     public Collection<Class<?>> getExtensions() {
         List<Class<?>> extensions = new ArrayList<>();
-        extensions.add(org.jahia.modules.securityfilter.jwt.graphql.generateJWTToken.mutation.QueryExtension.class);
+        extensions.add(MutationExtension.class);
         return extensions;
     }
 }
