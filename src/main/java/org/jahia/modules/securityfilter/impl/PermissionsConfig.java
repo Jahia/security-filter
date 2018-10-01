@@ -293,26 +293,6 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
     }
 
     private boolean hasPermissionInternal(String apiToCheck, String nodePath, Node node) throws RepositoryException {
-
-        boolean tokenPermissionPass = true;
-        for (Permission permission : permissions) {
-            //Determine if permission applies to resource and then check if token matches.
-            //If there is at least one permission that applies to requested resource and token not matches
-            //access will be denied
-            if ((permission.getWorkspaces().isEmpty() || !workspaceMatches(node, permission)) &&
-                    (permission.getApis().isEmpty() || !apiMatches(apiToCheck, permission)) &&
-                    (permission.getPathPatterns().isEmpty() || !pathMatches(nodePath, permission)) &&
-                    (permission.getNodeTypes().isEmpty() || !nodeTypeMatches(node, permission))) {
-                continue;
-            }
-
-            if (!tokenMatches(permission)) {
-                tokenPermissionPass = false;
-            }
-        }
-
-        if (!tokenPermissionPass) return false;
-
         for (Permission permission : permissions) {
 
             if (!workspaceMatches(node, permission) || !apiMatches(apiToCheck, permission)
