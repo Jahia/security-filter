@@ -10,6 +10,7 @@ import com.auth0.jwt.interfaces.Verification;
 import org.apache.commons.lang.StringUtils;
 import org.jahia.modules.securityfilter.JWTService;
 import org.osgi.service.cm.ConfigurationException;
+import org.osgi.service.cm.ManagedService;
 import org.osgi.service.cm.ManagedServiceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +19,7 @@ import org.apache.jackrabbit.util.ISO8601;
 import javax.jcr.RepositoryException;
 import java.util.*;
 
-public class JWTConfig implements JWTService, ManagedServiceFactory, InitializingBean {
+public class JWTConfig implements JWTService, ManagedService, InitializingBean {
     private static final Logger logger = LoggerFactory.getLogger(JWTConfig.class);
 
     //Configuration as defined by the config file. Includes secret, algorithm etc.
@@ -52,12 +53,8 @@ public class JWTConfig implements JWTService, ManagedServiceFactory, Initializin
     }
 
     @Override
-    public String getName() {
-        return "JWT token configuration";
-    }
-
-    @Override
-    public void updated(String pid, Dictionary<String, ?> properties) throws ConfigurationException {
+    public void updated(Dictionary<String, ?> properties) throws ConfigurationException {
+        tokenConfig.clear();
         if (properties != null) {
             Enumeration<String> keys = properties.keys();
             while (keys.hasMoreElements()) {
@@ -72,11 +69,6 @@ public class JWTConfig implements JWTService, ManagedServiceFactory, Initializin
             }
             logger.info("JWT configuration reloaded");
         }
-    }
-
-    @Override
-    public void deleted(String pid) {
-
     }
 
     @Override

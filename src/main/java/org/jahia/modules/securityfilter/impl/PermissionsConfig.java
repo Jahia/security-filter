@@ -154,10 +154,10 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
                 || permission.getWorkspaces().contains(node.getSession().getWorkspace().getName());
     }
 
-    private static boolean tokenMatches(Permission permission) {
+    private static boolean tokenMatches(Set<String> scopes) {
         TokenVerificationResult verificationResult = JWTFilter.getJWTTokenVerificationStatus();
 
-        if (permission.getScopes().isEmpty()) {
+        if (scopes.isEmpty()) {
             return true;
         }
 
@@ -173,7 +173,7 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
         //Token contains required scope, allow access
         if (verificationResult.getToken() != null) {
             List<String> tokenScopes = verificationResult.getToken().getClaim("scopes").asList(String.class);
-            for (String scope : permission.getScopes()) {
+            for (String scope : scopes) {
                 if (tokenScopes.contains(scope)) {
                     return true;
                 }
@@ -181,6 +181,10 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
         }
 
         return false;
+    }
+
+    private static boolean permissionMatches(String permission, JCRNodeWrapper node) {
+        return permission == null || node.hasPermission(permission);
     }
 
     private List<Permission> permissions = new ArrayList<Permission>();
@@ -250,6 +254,9 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
                 if (map.containsKey("scope")) {
                     permission.setScopes(new LinkedHashSet<String>(Arrays.asList(StringUtils.split(map.get("scope"), ", "))));
                 }
+                if (map.containsKey("requiredScope")) {
+                    permission.setRequiredScopes(new LinkedHashSet<String>(Arrays.asList(StringUtils.split(map.get("requiredScope"), ", "))));
+                }
                 newPermissions.add(permission);
             }
         }
@@ -294,27 +301,24 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
 
     private boolean hasPermissionInternal(String apiToCheck, String nodePath, Node node) throws RepositoryException {
         for (Permission permission : permissions) {
+            JCRNodeWrapper jcrNode = (JCRNodeWrapper) node;
 
             if (!workspaceMatches(node, permission) || !apiMatches(apiToCheck, permission)
                     || !pathMatches(nodePath, permission) || !nodeTypeMatches(node, permission)
-                    || !tokenMatches(permission)) {
+                    || !tokenMatches(permission.getScopes()) || !permissionMatches(permission.getPermission(), jcrNode)) {
                 continue;
             }
 
-            if (permission.getAccess() != null) {
-                if (permission.getAccess() == AccessType.denied) {
-                    return false;
-                } else if (permission.getAccess() == AccessType.restricted) {
-                    JCRNodeWrapper jcrNode = (JCRNodeWrapper) node;
-                    return jcrNode.hasPermission(getRestrictedPermissionName(jcrNode));
-                }
+            if (permission.getAccess() == AccessType.denied) {
+                return false;
+            } else if (permission.getAccess() == AccessType.restricted && !jcrNode.hasPermission(getRestrictedPermissionName(jcrNode))) {
+                return false;
+            } else if (!permissionMatches(permission.getRequiredPermission(), jcrNode)) {
+                return false;
+            } else if (!tokenMatches(permission.getRequiredScopes())) {
+                return false;
             }
-            if (permission.getPermission() != null && ((JCRNodeWrapper) node).hasPermission(permission.getPermission())) {
-                return true;
-            } else {
-                return permission.getRequiredPermission() == null
-                        || ((JCRNodeWrapper) node).hasPermission(permission.getRequiredPermission());
-            }
+            return true;
         }
         return true;
     }

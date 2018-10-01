@@ -42,7 +42,7 @@
 
     <osgi:service interface="org.jahia.modules.securityfilter.JWTService" ref="org.jahia.modules.securityfilter.jwt.impl.JWTConfig" />
 
-    <osgi:service interface="org.osgi.service.cm.ManagedServiceFactory" ref="org.jahia.modules.securityfilter.jwt.impl.JWTConfig">
+    <osgi:service interface="org.osgi.service.cm.ManagedService" ref="org.jahia.modules.securityfilter.jwt.impl.JWTConfig">
         <osgi:service-properties>
             <entry key="service.pid" value="org.jahia.modules.jwt.token"/>
             <entry key="service.description" value="JWT token configuration service"/>
