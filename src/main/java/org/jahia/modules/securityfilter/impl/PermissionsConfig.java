@@ -50,11 +50,7 @@ import org.jahia.modules.securityfilter.PermissionService;
 import org.jahia.modules.securityfilter.impl.Permission.AccessType;
 import org.jahia.modules.securityfilter.jwt.impl.JWTFilter;
 import org.jahia.modules.securityfilter.jwt.impl.TokenVerificationResult;
-import org.jahia.services.content.JCRCallback;
-import org.jahia.services.content.JCRContentUtils;
-import org.jahia.services.content.JCRNodeWrapper;
-import org.jahia.services.content.JCRSessionWrapper;
-import org.jahia.services.content.JCRTemplate;
+import org.jahia.services.content.*;
 import org.osgi.service.cm.ManagedServiceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,6 +58,7 @@ import org.springframework.beans.factory.InitializingBean;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.jcr.security.Privilege;
 
 import java.util.*;
@@ -122,7 +119,7 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
     }
 
     private static boolean nodeTypeMatches(Node node, Permission permission) throws RepositoryException {
-        if (permission.getNodeTypes().isEmpty()) {
+        if (permission.getNodeTypes().isEmpty() || node == null) {
             return true;
         }
 
@@ -135,11 +132,11 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
         return false;
     }
 
-    private static boolean pathMatches(String nodePath, Permission permission) {
-        if (permission.getPathPatterns().isEmpty()) {
+    private static boolean pathMatches(Node node, Permission permission) throws RepositoryException {
+        if (permission.getPathPatterns().isEmpty() || node == null) {
             return true;
         }
-
+        String nodePath = node.getPath();
         for (Pattern pattern : permission.getPathPatterns()) {
             if (pattern.matcher(nodePath).matches()) {
                 return true;
@@ -150,7 +147,7 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
     }
 
     private static boolean workspaceMatches(Node node, Permission permission) throws RepositoryException {
-        return permission.getWorkspaces().isEmpty()
+        return permission.getWorkspaces().isEmpty() || node == null
                 || permission.getWorkspaces().contains(node.getSession().getWorkspace().getName());
     }
 
@@ -286,10 +283,13 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
 
     @Override
     public boolean hasPermission(String apiToCheck, Node node) throws RepositoryException {
-        String nodePath = node.getPath();
+        if (apiToCheck == null) {
+            throw new IllegalArgumentException("Must pass an  api name");
+        }
 
-        boolean hasPermission = hasPermissionInternal(apiToCheck, nodePath, node);
+        boolean hasPermission = hasPermissionInternal(apiToCheck, (JCRNodeWrapper) node);
 
+        String nodePath = node != null ? node.getPath() : "global";
         if (hasPermission) {
             logger.debug("Checking api permission '{}' for {}: GRANTED", apiToCheck, nodePath);
         } else {
@@ -299,21 +299,21 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
         return hasPermission;
     }
 
-    private boolean hasPermissionInternal(String apiToCheck, String nodePath, Node node) throws RepositoryException {
+    private boolean hasPermissionInternal(String apiToCheck, JCRNodeWrapper jcrNode) throws RepositoryException {
         for (Permission permission : permissions) {
-            JCRNodeWrapper jcrNode = (JCRNodeWrapper) node;
+            JCRNodeWrapper targetNode = jcrNode != null ? jcrNode : getDefaultTargetNode();
 
-            if (!workspaceMatches(node, permission) || !apiMatches(apiToCheck, permission)
-                    || !pathMatches(nodePath, permission) || !nodeTypeMatches(node, permission)
-                    || !tokenMatches(permission.getScopes()) || !permissionMatches(permission.getPermission(), jcrNode)) {
+            if (!workspaceMatches(jcrNode, permission) || !apiMatches(apiToCheck, permission)
+                    || !pathMatches(jcrNode, permission) || !nodeTypeMatches(jcrNode, permission)
+                    || !tokenMatches(permission.getScopes()) || !permissionMatches(permission.getPermission(), targetNode)) {
                 continue;
             }
 
             if (permission.getAccess() == AccessType.denied) {
                 return false;
-            } else if (permission.getAccess() == AccessType.restricted && !jcrNode.hasPermission(getRestrictedPermissionName(jcrNode))) {
+            } else if (permission.getAccess() == AccessType.restricted && !targetNode.hasPermission(getRestrictedPermissionName(targetNode))) {
                 return false;
-            } else if (!permissionMatches(permission.getRequiredPermission(), jcrNode)) {
+            } else if (!permissionMatches(permission.getRequiredPermission(), targetNode)) {
                 return false;
             } else if (!tokenMatches(permission.getRequiredScopes())) {
                 return false;
@@ -321,6 +321,10 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
             return true;
         }
         return true;
+    }
+
+    private JCRNodeWrapper getDefaultTargetNode() throws RepositoryException {
+        return JCRSessionFactory.getInstance().getCurrentUserSession("live").getRootNode();
     }
 
     private String getRestrictedPermissionName(JCRNodeWrapper node) {
