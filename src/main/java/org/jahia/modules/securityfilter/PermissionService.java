@@ -54,8 +54,8 @@ public interface PermissionService {
      * Checks if the current user has access to the specified node using the provided API key (used in configuration rules).
      * 
      * @param api the API key to test access
-     * @param node the requested JCR node
-     * @return <code>true</code> if the current user is allowed to access the node; <code>false</code> otherwise
+     * @param node the requested JCR node, or null to test the permission globally
+     * @return <code>true</code> if the current user is allowed to access the api; <code>false</code> otherwise
      * @throws RepositoryException in case of an error during permission check
      */
     public boolean hasPermission(String api, Node node) throws RepositoryException;
