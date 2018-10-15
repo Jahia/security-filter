@@ -66,7 +66,7 @@
     <graphql-java.version>6.0</graphql-java.version>
     <graphql-java-servlet.version>4.7.0</graphql-java-servlet.version>
     <jahia-module-type>system</jahia-module-type>
-    <jahia-depends>default,graphql-dxm-provider,serverSettings,tools</jahia-depends>
+    <jahia-depends>default,graphql-dxm-provider</jahia-depends>
     <graphql-java-annotations.version>6.0.0-jahia1</graphql-java-annotations.version>
   </properties>
   <dependencies>
@@ -123,10 +123,8 @@
         <configuration>
           <instructions>
             <_dsannotations>*</_dsannotations>
-            <Import-Package>
-              ${jahia.plugin.projectPackageImport},
-              *
-            </Import-Package>
+            <Import-Package>${jahia.plugin.projectPackageImport},
+              *</Import-Package>
             <Export-Package>org.jahia.modules.securityfilter</Export-Package>
           </instructions>
         </configuration>
