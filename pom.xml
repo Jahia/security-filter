@@ -44,8 +44,7 @@
         please contact the sales department at sales@jahia.com.
 
 -->
-<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.jahia.modules</groupId>
@@ -53,7 +52,7 @@
     <version>7.2.0.0</version>
   </parent>
   <artifactId>security-filter</artifactId>
-  <version>1.0.2-SNAPSHOT</version>
+  <version>1.0.2</version>
   <packaging>bundle</packaging>
   <name>Jahia API security config and filter</name>
   <description>Jahia API security config and filter</description>
@@ -61,6 +60,7 @@
     <connection>scm:git:git@github.com:Jahia/security-filter.git</connection>
     <developerConnection>scm:git:git@github.com:Jahia/security-filter.git</developerConnection>
     <url>scm:git:git@github.com:Jahia/security-filter.git</url>
+    <tag>1_0_2</tag>
   </scm>
   <properties>
     <graphql-java.version>6.0</graphql-java.version>
