@@ -49,7 +49,7 @@
   <parent>
     <groupId>org.jahia.modules</groupId>
     <artifactId>jahia-modules</artifactId>
-    <version>7.2.0.0</version>
+    <version>7.2.1.1</version>
   </parent>
   <artifactId>security-filter</artifactId>
   <version>1.0.3-SNAPSHOT</version>
@@ -74,6 +74,12 @@
       <groupId>com.auth0</groupId>
       <artifactId>java-jwt</artifactId>
       <version>3.4.0</version>
+      <exclusions>
+          <exclusion>
+              <groupId>com.fasterxml.jackson.core</groupId>
+              <artifactId>jackson-databind</artifactId>
+          </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>com.graphql-java</groupId>
@@ -86,6 +92,16 @@
       <artifactId>graphql-java-servlet</artifactId>
       <version>${graphql-java-servlet.version}</version>
       <scope>provided</scope>
+      <exclusions>
+          <exclusion>
+              <groupId>com.fasterxml.jackson.core</groupId>
+              <artifactId>jackson-databind</artifactId>
+          </exclusion>
+          <exclusion>
+              <groupId>com.fasterxml.jackson.core</groupId>
+              <artifactId>jackson-core</artifactId>
+          </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.jahia.modules</groupId>
