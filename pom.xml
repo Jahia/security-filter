@@ -139,8 +139,6 @@
         <configuration>
           <instructions>
             <_dsannotations>*</_dsannotations>
-            <Import-Package>${jahia.plugin.projectPackageImport},
-              *</Import-Package>
             <Export-Package>org.jahia.modules.securityfilter</Export-Package>
           </instructions>
         </configuration>
