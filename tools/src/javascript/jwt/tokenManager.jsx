@@ -52,7 +52,7 @@ class TokenManager extends React.Component {
                          close={ this.toggleDialog }
                          { ...this.getClaims(token.claims) }/>
             <p>
-                <textarea className={ classes.textArea } value={token.token} disabled={ true }/>
+                <textarea className={ classes.textArea } value={token.token} readOnly={ true }/>
                 { this.editButton() }
             </p>
         </div>;
