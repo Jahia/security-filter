@@ -16,10 +16,12 @@ The first rule that matches defines the permission that will be checked on the n
 A permission rule is defined by a list of entries of the following format :
 
 ```
-permission.<rulename>.<propertyname>=<value>
+permission.<rulename>.<property>=<value>
 ```
 
-A rule can define an `access`, `permission`, `requiredPermission`, `scope`, or `requiredScope` property. `access` can take 2 different values : 
+Where `property` will define the kind of access and the matching criteria for this rule. 
+
+A rule can define at most one of the following properties : `access`, `requiredPermission`, `requiredScope`. `access` can take 2 different values : 
 - `denied` : Forbidden for everybody
 - `restricted` : Only allowed for users who have the `api-access` permission on the node
 
@@ -27,18 +29,23 @@ The check can be defined more precisely by using `requiredPermission` instead : 
 
 Instead of a permission, a rule can specify a `requiredScope`. Scope can be granted to a request through tokens passed in `Authorization` header (see Scope and tokens below). The access will be granted if and only if the scope is owned by the request.
 
-Another option is to specify `permission` or `scope` - if the user has the permission/scope, his access will be granted, and no other rule will be checked. But it's not required - if he does not have it, subsequent rules will be checked. 
-
 By default, if none of these parameters are passed, the API is granted - no other rules will be tested, and no permission needs to be checked.
+
+Rules can also define matching criterias with the following properties :
 
 A rule can specify any number of matching criteria. Each of these criteria can have a single value or a comma separated list of values.
  - `api` : The names of the API, if the rule should only apply to some entry points
  - `pathPattern` : Regular expressions that will be tested on the node path.
  - `workspace` : `live` or `default`, only request on the specified workspace will match.
  - `nodeType` : Only request on nodes of these type will match.
- - `scope` : A list of scopes 
+ - `scope` : Only request claiming that scope will match. 
+ - `permission` : Only request with users having this permission will match.
  
-An optional priority can be also specified - the rules with the lowest value will be executed first. Default priority is 0.
+Note the difference between `requiredPermission`/`requiredScope` and `permission`/`scope` - in the "non-required" case, if the user has the permission/scope, his access will be granted (based on `access`, `requiredPermission`, `requiredScope` values), and no other rule will be checked. 
+But it's not required - if he does not have it, the rule won't match, and so subsequent rules will be checked. 
+In the "required" case, if the rule match, the user must have the permission/scope - no other rule will be checked. 
+
+An optional `priority` property can be also specified - the rules with the lowest value will be executed first. Default priority is 0.
 
 ```
 permission.checkFirst.priority=-10
@@ -55,12 +62,24 @@ Rules can specify a simple path pattern :
 permission.users.pathPattern=/sites/[^/]+/home/.*
 ```
 
-Or a combination of all criterias :
+Or a combination of all criterias - if all conditions must match (including the permissionn), access will be granted
 ```    
 permission.digitallPostsInLive.pathPattern=/sites/digitall/.*
 permission.digitallPostsInLive.nodeType=jnt:post,jnt:message
 permission.digitallPostsInLive.workspace=live
-permission.digitallPostsInLive.requiredPermission=jcr:write
+permission.digitallPostsInLive.permission=jcr:write
+```
+
+This rule will grant full access for all users claiming one of the scopes scope1, scope2 or scope3
+```
+permission.jwtAccess.scope=scope1,scope2,scope3
+```
+
+This rule will require myPermission for all graphql call on /sites/secure
+```
+permission.secure.api=graphql
+permission.secure.pathPattern=/sites/secure/.*
+permission.secure.requiredPermission=myPermission
 ```
 
 ### Permissions in a module
@@ -72,14 +91,66 @@ A module can package a configuration file in META-INF/configurations folder. Sin
 A request can be granted a scope through the usage of tokens, passed in the `Authentication: Bearer` header. 
 
 Security filter currently only support signed JWT token. Tokens contain a verified list of scopes, along with restriction on its usage. 
-It's possible to restrct the usage of a token based on the client IP or referer header.
+It's possible to restrict the usage of a token based on the client IP or referer header.
 
-Tokens can be generated via the tools section "jwtConfiguration" - the user can specify the list of scopes that will be owned by the token, and fill in the optional restrictions. You must customize org.jahia.modules.jwt.token.cfg configuration file before generating any token. The file contains the following properties :
+### Configuration
+
+Tokens can be generated via the tools section "jwtConfiguration" - the user can specify the list of scopes that will be owned by the token, and fill in the optional restrictions. 
+You must customize org.jahia.modules.jwt.token.cfg configuration file before generating any token. 
+The file contains the following properties :
 
 - `jwt.issuer` : Name of your organization, that will be included in tokens, only for informational purpose
 - `jwt.audience` : The target audience is an identifier for you DX installation - audience is included in the token at generation, and only tokens with the same audience will be accepted.
 - `jwt.algorithm` : Algorithm used to sign the token. Only HMAC supported.
 - `jwt.secret` : Secret key used to be used with HMAC. It will be used to sign and validate tokens. You must change the secret and keep it safe - any token signed with the same secret can be accepted and will grant the associated scopes.
+
+### JWT example
+
+The getaway app is an example of SPA, accessing specific data through GraphQL. The code can be found on github: [getaway-dx-module](https://github.com/Jahia/getaway-dx-module) and [getaway-reactjs-app](https://github.com/Jahia/getaway-reactjs-app). 
+
+The module first defines different types, that need to be accessible by the react SPA. The [CND file](https://github.com/Jahia/getaway-dx-module/blob/master/src/main/resources/META-INF/definitions.cnd) contains definitions for `gant:destination` , `gant:highlightedLandmarks`
+
+A [configuration file](https://github.com/Jahia/getaway-dx-module/blob/master/src/main/resources/META-INF/configurations/org.jahia.modules.api.permissions-getaway.cfg) will give access
+for nodes with these types and `jmix:image`, when they are in `/sites/getaway/contents` and `/sites/getaway/files`. They will be accessible by the `jcr.nodesByQuery` graphql endpoint 
+for bearers of the scope `getaway` :
+
+```
+permission.getaway.api=graphql.Query.jcr,graphql.JCRQuery.nodesByQuery
+permission.getaway.scope=getaway
+permission.getaway.nodeType=gant:destination, gant:highlightedLandmarks, jmix:image
+permission.getaway.pathPattern=/sites/[^/]+/contents/.*, /sites/[^/]+/files/.*
+```
+
+In order for the rule to apply and grant these access, the client will have to provide a valid token containing the corresponding `scope` claim.
+
+The `jwtConfiguration` tool will be used to generate the token. Scope is `getaway`, and we will add more restrictions on the referer field, so that the token can only be used when being used from a site on `http://localhost` or `http://127.0.0.1` .
+
+Generated token will look like that :
+`eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJodHRwOi8vamFoaWEuY29tIiwic3ViIjoiYXBpIHZlcmlmaWNhdGlvbiIsInJlZmVyZXIiOlsiaHR0cDovLzEyNy4wLjAuMSIsImh0dHA6Ly9sb2NhbGhvc3QiXSwiaXNzIjoiZHgiLCJzY29wZXMiOlsiZ2V0YXdheSJdLCJpYXQiOjE1Mzg0NjU3NjQsImp0aSI6ImJiNjUyYmI2LTVlOGUtNGRmZC1hYjI3LWRlYzY4NWQxZmVmYiJ9.YolJyuSXGlvIN9_hL4eH6D9_oFHKwt005y3vfCuR2ZU`
+
+The content of the token can be verified on [jwt.io](https://jwt.io/) :
+
+```json
+{
+  "aud": "http://jahia.com",
+  "sub": "api verification",
+  "referer": [
+    "http://127.0.0.1",
+    "http://localhost"
+  ],
+  "iss": "dx",
+  "scopes": [
+    "getaway"
+  ],
+  "iat": 1538465764,
+  "jti": "bb652bb6-5e8e-4dfd-ab27-dec685d1fefb"
+}
+```
+
+The claims `aud` and `iss` are coming from the configuration file. You can also check the signature on [jwt.io](https://jwt.io/) - here the token is signed with the default key `my super secret secret`. It must match the secret in the configuration file.
+`iat` is the date of issue, and `jti` is a unique token identifier. They could be used to set an expiration time or manually revoke a specific token, although the current implementation does not support it yet.
+
+Finally, the application will add the token to its `Authentication: Bearer` header, as in [index.js](https://github.com/Jahia/getaway-reactjs-app/blob/master/src/index.js) . 
 
 ## Render filter
 
