@@ -62,7 +62,7 @@ Rules can specify a simple path pattern :
 permission.users.pathPattern=/sites/[^/]+/home/.*
 ```
 
-Or a combination of all criterias - if all conditions must match (including the permissionn), access will be granted
+Or a combination of all criterias - if all conditions must match (including the permission), access will be granted
 ```    
 permission.digitallPostsInLive.pathPattern=/sites/digitall/.*
 permission.digitallPostsInLive.nodeType=jnt:post,jnt:message
