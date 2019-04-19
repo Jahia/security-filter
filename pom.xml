@@ -28,7 +28,7 @@
         GNU General Public License for more details.
 
         You should have received a copy of the GNU General Public License
-        along with this program. If not, see <http://www.gnu.org/licenses/>.
+        along with this program. If not, see <http://www.gnu.org/licenses />.
 
 
         2/ JSEL - Commercial and Supported Versions of the program
@@ -54,7 +54,7 @@
     </parent>
 
     <artifactId>security-filter-parent</artifactId>
-    <version>1.0.3-SNAPSHOT</version>
+    <version>1.0.3</version>
     <packaging>pom</packaging>
     <name>Jahia API security config and filter parent</name>
     <description>Jahia API security config and filter parent</description>
@@ -63,7 +63,7 @@
         <connection>scm:git:git@github.com:Jahia/security-filter.git</connection>
         <developerConnection>scm:git:git@github.com:Jahia/security-filter.git</developerConnection>
         <url>scm:git:git@github.com:Jahia/security-filter.git</url>
-        <tag>HEAD</tag>
+        <tag>1_0_3</tag>
     </scm>
 
     <repositories>
