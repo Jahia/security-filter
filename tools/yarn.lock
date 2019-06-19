@@ -83,7 +83,7 @@
 
 "@jahia/apollo-dx@^1.0.0-beta.1", "@jahia/apollo-dx@^1.0.0-beta.20180605080716":
   version "1.0.0-beta.20190322175229"
-  resolved "http://npm.int.jahia.com:4873/@jahia%2fapollo-dx/-/apollo-dx-1.0.0-beta.20190322175229.tgz#099b5336618ec0a692a4ebe3d3b0aa1497229053"
+  resolved "https://npm.jahia.com/@jahia%2fapollo-dx/-/apollo-dx-1.0.0-beta.20190322175229.tgz#099b5336618ec0a692a4ebe3d3b0aa1497229053"
   dependencies:
     apollo-cache-inmemory "^1.2.2"
     apollo-client "^2.3.2"
@@ -98,7 +98,7 @@
 
 "@jahia/ds-mui-theme@^1.0.0-beta.20190313104751":
   version "1.0.0-beta.20190322175229"
-  resolved "http://npm.int.jahia.com:4873/@jahia%2fds-mui-theme/-/ds-mui-theme-1.0.0-beta.20190322175229.tgz#59c918e0f0259148ee54b82e19cf3494c84398cc"
+  resolved "https://npm.jahia.com/@jahia%2fds-mui-theme/-/ds-mui-theme-1.0.0-beta.20190322175229.tgz#59c918e0f0259148ee54b82e19cf3494c84398cc"
   dependencies:
     "@material-ui/core" "^3.6.2"
     classnames "^2.2.6"
@@ -107,7 +107,7 @@
 
 "@jahia/i18next@^1.0.0-beta.20180628145923":
   version "1.0.0-beta.20190322175229"
-  resolved "http://npm.int.jahia.com:4873/@jahia%2fi18next/-/i18next-1.0.0-beta.20190322175229.tgz#bb8d9e86be47684ae4d4e85885be6a1c6e339d5a"
+  resolved "https://npm.jahia.com/@jahia%2fi18next/-/i18next-1.0.0-beta.20190322175229.tgz#bb8d9e86be47684ae4d4e85885be6a1c6e339d5a"
   dependencies:
     i18next "^11.3.2"
     i18next-chained-backend "^0.1.2"
@@ -115,7 +115,7 @@
 
 "@jahia/icons@^1.0.0-beta.20181011112119":
   version "1.0.0-beta.20190322175229"
-  resolved "http://npm.int.jahia.com:4873/@jahia%2ficons/-/icons-1.0.0-beta.20190322175229.tgz#865399dd07bf46c23b3ccdf6a4b0d8ae822cde8b"
+  resolved "https://npm.jahia.com/@jahia%2ficons/-/icons-1.0.0-beta.20190322175229.tgz#865399dd07bf46c23b3ccdf6a4b0d8ae822cde8b"
   dependencies:
     "@material-ui/core" "^3.6.2"
     "@material-ui/icons" "^3.0.1"
@@ -124,7 +124,7 @@
 
 "@jahia/react-apollo@^1.0.0-beta.20180605080720":
   version "1.0.0-beta.20190322175232"
-  resolved "http://npm.int.jahia.com:4873/@jahia%2freact-apollo/-/react-apollo-1.0.0-beta.20190322175232.tgz#948b8732e25bcb0e9bde8703b55f4fd65f6d69bd"
+  resolved "https://npm.jahia.com/@jahia%2freact-apollo/-/react-apollo-1.0.0-beta.20190322175232.tgz#948b8732e25bcb0e9bde8703b55f4fd65f6d69bd"
   dependencies:
     "@jahia/apollo-dx" "^1.0.0-beta.1"
     apollo-client "^2.3.2"
@@ -135,7 +135,7 @@
 
 "@jahia/react-material@^1.0.0-beta.20180710133148":
   version "1.0.0-beta.20190322175232"
-  resolved "http://npm.int.jahia.com:4873/@jahia%2freact-material/-/react-material-1.0.0-beta.20190322175232.tgz#090bcf5cd4a02eaf074edcc95622dadf75acb5ee"
+  resolved "https://npm.jahia.com/@jahia%2freact-material/-/react-material-1.0.0-beta.20190322175232.tgz#090bcf5cd4a02eaf074edcc95622dadf75acb5ee"
   dependencies:
     "@jahia/ds-mui-theme" "^1.0.0-beta.20190313104751"
     "@jahia/icons" "^1.0.0-beta.20181011112119"
@@ -151,7 +151,7 @@
 
 "@jahia/redux@^1.0.0-beta.20180628145924":
   version "1.0.0-beta.20190322175230"
-  resolved "http://npm.int.jahia.com:4873/@jahia%2fredux/-/redux-1.0.0-beta.20190322175230.tgz#95763990c7c207957e313b791c6923a143176433"
+  resolved "https://npm.jahia.com/@jahia%2fredux/-/redux-1.0.0-beta.20190322175230.tgz#95763990c7c207957e313b791c6923a143176433"
   dependencies:
     lodash "^4.17.10"
     redux "^4.0.0"
