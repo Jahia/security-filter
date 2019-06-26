@@ -63,7 +63,7 @@
         <connection>scm:git:git@github.com:Jahia/security-filter.git</connection>
         <developerConnection>scm:git:git@github.com:Jahia/security-filter.git</developerConnection>
         <url>scm:git:git@github.com:Jahia/security-filter.git</url>
-        <tag>HEAD</tag>
+        <tag>1_0_x</tag>
     </scm>
 
     <repositories>
