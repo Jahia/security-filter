@@ -50,7 +50,7 @@
     <parent>
         <groupId>org.jahia.modules</groupId>
         <artifactId>security-filter-parent</artifactId>
-        <version>1.1.0-SNAPSHOT</version>
+        <version>2.0.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>security-filter</artifactId>
@@ -87,6 +87,7 @@
                         <Import-Package>${jahia.plugin.projectPackageImport},
                             *</Import-Package>
                         <Export-Package>org.jahia.modules.securityfilter,com.auth0.jwt.interfaces</Export-Package>
+                        <Jahia-Signature>MCwCFAhHqewLnCosL422KeCilbtlUQN7AhRvz4lRNT3Uhy7tWccKXaFaRVTU1w==</Jahia-Signature>
                     </instructions>
                 </configuration>
             </plugin>
