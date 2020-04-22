@@ -60,6 +60,7 @@
 
     <properties>
         <jahia-module-type>system</jahia-module-type>
+        <require-capability>osgi.extender;filter:="(osgi.extender=org.jahia.bundles.blueprint.extender.config)"</require-capability>
     </properties>
 
     <dependencies>
