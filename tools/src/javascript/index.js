@@ -1,1 +1,0 @@
-import JWTApp from './jwt/main';

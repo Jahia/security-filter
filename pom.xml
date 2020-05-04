@@ -53,11 +53,11 @@
         <version>8.0.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>security-filter-parent</artifactId>
+    <artifactId>security-filter</artifactId>
     <version>2.0.0-SNAPSHOT</version>
-    <packaging>pom</packaging>
-    <name>Jahia API security config and filter parent</name>
-    <description>Jahia API security config and filter parent</description>
+    <packaging>bundle</packaging>
+    <name>Jahia API security config and filter</name>
+    <description>Jahia API security config and filter</description>
 
     <scm>
         <connection>scm:git:git@github.com:Jahia/security-filter.git</connection>
@@ -81,8 +81,40 @@
         </repository>
     </repositories>
 
-    <modules>
-        <module>core</module>
-        <module>tools</module>
-    </modules>
+    <properties>
+        <jahia-module-type>system</jahia-module-type>
+        <require-capability>osgi.extender;filter:="(osgi.extender=org.jahia.bundles.blueprint.extender.config)"</require-capability>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.auth0</groupId>
+            <artifactId>java-jwt</artifactId>
+            <version>3.4.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-databind</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Import-Package>${jahia.plugin.projectPackageImport},
+                            *</Import-Package>
+                        <Export-Package>org.jahia.modules.securityfilter,com.auth0.jwt.interfaces</Export-Package>
+                        <Jahia-Signature>MCwCFAhHqewLnCosL422KeCilbtlUQN7AhRvz4lRNT3Uhy7tWccKXaFaRVTU1w==</Jahia-Signature>
+                    </instructions>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>
