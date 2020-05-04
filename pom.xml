@@ -50,11 +50,11 @@
     <parent>
         <groupId>org.jahia.modules</groupId>
         <artifactId>jahia-modules</artifactId>
-        <version>8.0.0.0-SNAPSHOT</version>
+        <version>8.0.0.0</version>
     </parent>
 
     <artifactId>security-filter</artifactId>
-    <version>2.0.0-SNAPSHOT</version>
+    <version>2.0.0</version>
     <packaging>bundle</packaging>
     <name>Jahia API security config and filter</name>
     <description>Jahia API security config and filter</description>
@@ -63,7 +63,7 @@
         <connection>scm:git:git@github.com:Jahia/security-filter.git</connection>
         <developerConnection>scm:git:git@github.com:Jahia/security-filter.git</developerConnection>
         <url>scm:git:git@github.com:Jahia/security-filter.git</url>
-        <tag>HEAD</tag>
+        <tag>2_0_0</tag>
     </scm>
 
     <repositories>
