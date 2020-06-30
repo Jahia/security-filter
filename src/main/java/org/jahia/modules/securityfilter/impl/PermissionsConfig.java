@@ -58,7 +58,6 @@ import org.springframework.beans.factory.InitializingBean;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
-import javax.jcr.Session;
 import javax.jcr.security.Privilege;
 
 import java.util.*;
@@ -158,10 +157,6 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
             return true;
         }
 
-//        if (!permission.getScopes().isEmpty() && verificationResult.getVerificationStatusCode() == TokenVerificationResult.VerificationStatus.NOT_FOUND) {
-//            return true;
-//        }
-
         //Failed to verify token signature
         if (verificationResult.getVerificationStatusCode() == TokenVerificationResult.VerificationStatus.REJECTED) {
             return false;
@@ -188,9 +183,9 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
 
     private Map<String, List<Permission>> permissionsByPid = new HashMap<String, List<Permission>>();
 
-    private String restrictedAccessPermissionFallbackName; 
+    private String restrictedAccessPermissionFallbackName;
 
-    private String restrictedAccessPermissionName; 
+    private String restrictedAccessPermissionName;
 
     private PermissionsConfig() {
         super();
@@ -284,7 +279,7 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
     @Override
     public boolean hasPermission(String apiToCheck, Node node) throws RepositoryException {
         if (apiToCheck == null) {
-            throw new IllegalArgumentException("Must pass an  api name");
+            throw new IllegalArgumentException("Must pass an api name");
         }
 
         boolean hasPermission = hasPermissionInternal(apiToCheck, (JCRNodeWrapper) node);

@@ -51,4 +51,9 @@
     </osgi:service>
 
     <!--End JWT-->
+
+    <bean id="springBeansAccess" class="org.jahia.modules.securityfilter.api.SpringBeansAccess"
+          factory-method="getInstance">
+        <property name="jcrTemplate" ref="jcrTemplate"/>
+    </bean>
 </beans>
