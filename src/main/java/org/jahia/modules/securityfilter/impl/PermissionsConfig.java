@@ -47,6 +47,9 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.jackrabbit.core.security.JahiaPrivilegeRegistry;
 import org.jahia.exceptions.JahiaRuntimeException;
 import org.jahia.modules.securityfilter.PermissionService;
+import org.jahia.modules.securityfilter.accesskey.AccessKeyFilter;
+import org.jahia.modules.securityfilter.accesskey.AccessKeyService;
+import org.jahia.modules.securityfilter.accesskey.valves.AccessKeyAuthValve;
 import org.jahia.modules.securityfilter.impl.Permission.AccessType;
 import org.jahia.modules.securityfilter.jwt.impl.JWTFilter;
 import org.jahia.modules.securityfilter.jwt.impl.TokenVerificationResult;
@@ -62,6 +65,7 @@ import javax.jcr.security.Privilege;
 
 import java.util.*;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Access permission configuration service.
@@ -85,6 +89,7 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
         }
 
         for (String api : permission.getApis()) {
+            System.out.println("API: " + api + "   check  " + apiToCheck);
             if (api.equals(apiToCheck) || apiToCheck.startsWith(api + ".")) {
                 return true;
             }
@@ -123,6 +128,7 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
         }
 
         for (String nodeType : permission.getNodeTypes()) {
+            System.out.println(nodeType);
             if (node.isNodeType(nodeType)) {
                 return true;
             }
@@ -137,6 +143,7 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
         }
         String nodePath = node.getPath();
         for (Pattern pattern : permission.getPathPatterns()) {
+            System.out.println("Path: " + nodePath + "--- match ---" + pattern.toString());
             if (pattern.matcher(nodePath).matches()) {
                 return true;
             }
@@ -151,7 +158,7 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
     }
 
     private static boolean tokenMatches(Set<String> scopes) {
-        TokenVerificationResult verificationResult = JWTFilter.getJWTTokenVerificationStatus();
+        TokenVerificationResult verificationResult = AccessKeyAuthValve.getAccessKeyVerificationStatus();
 
         if (scopes.isEmpty()) {
             return true;
@@ -163,10 +170,11 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
         }
 
         //Token contains required scope, allow access
-        if (verificationResult.getToken() != null) {
-            List<String> tokenScopes = verificationResult.getToken().getClaim("scopes").asList(String.class);
+        if (verificationResult.getAccessKey() != null) {
+            List<String> tokenScopes = verificationResult.getAccessKey().getScopes();
             for (String scope : scopes) {
                 if (tokenScopes.contains(scope)) {
+                    System.out.println(scope + "---" + tokenScopes.get(0));
                     return true;
                 }
             }
@@ -180,6 +188,8 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
     }
 
     private List<Permission> permissions = new ArrayList<Permission>();
+
+    private AccessKeyService accessKeyService;
 
     private Map<String, List<Permission>> permissionsByPid = new HashMap<String, List<Permission>>();
 
@@ -282,7 +292,16 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
             throw new IllegalArgumentException("Must pass an api name");
         }
 
-        boolean hasPermission = hasPermissionInternal(apiToCheck, (JCRNodeWrapper) node);
+        boolean hasPermission;
+
+        TokenVerificationResult verificationResult = AccessKeyAuthValve.getAccessKeyVerificationStatus();
+
+        if (verificationResult != null && verificationResult.getAccessKey() != null) {
+            hasPermission = hasPermissionInternalWithAccessKey(apiToCheck, (JCRNodeWrapper) node, verificationResult);
+        } else {
+            hasPermission = hasPermissionInternal(apiToCheck, (JCRNodeWrapper) node);
+        }
+
 
         String nodePath = node != null ? node.getPath() : "global";
         if (hasPermission) {
@@ -300,7 +319,7 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
 
             if (!workspaceMatches(jcrNode, permission) || !apiMatches(apiToCheck, permission)
                     || !pathMatches(jcrNode, permission) || !nodeTypeMatches(jcrNode, permission)
-                    || !tokenMatches(permission.getScopes()) || !permissionMatches(permission.getPermission(), targetNode)) {
+                     || !permissionMatches(permission.getPermission(), targetNode)) {
                 continue;
             }
 
@@ -310,12 +329,45 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
                 return false;
             } else if (!permissionMatches(permission.getRequiredPermission(), targetNode)) {
                 return false;
-            } else if (!tokenMatches(permission.getRequiredScopes())) {
-                return false;
             }
+//            else if (!tokenMatches(permission.getRequiredScopes())) {
+//                return false;
+//            }
             return true;
         }
         return true;
+    }
+
+    private boolean hasPermissionInternalWithAccessKey(String apiToCheck, JCRNodeWrapper jcrNode, TokenVerificationResult verificationResult) throws RepositoryException {
+        logger.info("Check internal permission");
+
+        if (verificationResult.getVerificationStatusCode() != TokenVerificationResult.VerificationStatus.VERIFIED) {
+            logger.info("Access key is inactive");
+            return false;
+        }
+
+        Permission permission = accessKeyService.getPermission(verificationResult.getAccessKey());
+
+        if (permission != null) {
+            JCRNodeWrapper targetNode = jcrNode != null ? jcrNode : getDefaultTargetNode();
+            System.out.println("Node and API in hasPermission: " + targetNode + "  ---  " + apiToCheck);
+            System.out.println("Attr1: " + apiMatches(apiToCheck, permission));
+            System.out.println("Attr2: " + workspaceMatches(jcrNode, permission));
+            System.out.println("Attr3: " + pathMatches(jcrNode, permission));
+            System.out.println("Attr4: " + nodeTypeMatches(jcrNode, permission));
+            System.out.println("Attr5: " + permissionMatches(permission.getPermission(), targetNode));
+            if (!workspaceMatches(jcrNode, permission) || !apiMatches(apiToCheck, permission)
+                    || !pathMatches(jcrNode, permission) || !nodeTypeMatches(jcrNode, permission)
+                    || !permissionMatches(permission.getPermission(), targetNode)) {
+                logger.info("Check internal permission FAIL on attribute");
+                return false;
+            }
+            logger.info("Internal permission is OK");
+            return true;
+        }
+
+        logger.info("Check internal permission FAIL");
+        return false;
     }
 
     private JCRNodeWrapper getDefaultTargetNode() throws RepositoryException {
@@ -342,5 +394,9 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
         }
 
         logger.info("Using {} permission for restricted access", this.restrictedAccessPermissionName);
+    }
+
+    public void setAccessKeyService(AccessKeyService accessKeyService) {
+        this.accessKeyService = accessKeyService;
     }
 }

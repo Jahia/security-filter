@@ -10,6 +10,7 @@
     <bean id="org.jahia.modules.securityfilter.impl.PermissionsConfig" class="org.jahia.modules.securityfilter.impl.PermissionsConfig">
         <property name="restrictedAccessPermissionFallbackName" value="${jahia.rest.restrictedAccessPermissionName:jcr:addChildNodes_default}"/>
         <property name="restrictedAccessPermissionName" value="${jahia.rest.restrictedAccessPermissionName:api-access}"/>
+        <property name="accessKeyService" ref="org.jahia.modules.securityfilter.accesskey.AccessKeyConfig"/>
     </bean>
 
     <bean id="permissionRenderFilter" class="org.jahia.modules.securityfilter.impl.PermissionFilter">
@@ -52,8 +53,32 @@
 
     <!--End JWT-->
 
-    <bean id="springBeansAccess" class="org.jahia.modules.securityfilter.api.SpringBeansAccess"
-          factory-method="getInstance">
+    <!--Access Key-->
+
+    <bean id="org.jahia.modules.securityfilter.accesskey.AccessKeyConfig" class="org.jahia.modules.securityfilter.accesskey.AccessKeyConfig">
         <property name="jcrTemplate" ref="jcrTemplate"/>
     </bean>
+
+    <osgi:service interface="org.jahia.modules.securityfilter.accesskey.AccessKeyService" ref="org.jahia.modules.securityfilter.accesskey.AccessKeyConfig" />
+
+    <osgi:service interface="org.osgi.service.cm.ManagedService" ref="org.jahia.modules.securityfilter.accesskey.AccessKeyConfig">
+        <osgi:service-properties>
+            <entry key="service.pid" value="org.jahia.modules.access.key"/>
+            <entry key="service.description" value="Access key configuration service"/>
+            <entry key="service.vendor" value="Jahia Solutions Group SA"/>
+        </osgi:service-properties>
+    </osgi:service>
+
+    <bean id="accessKeyFilter" class="org.jahia.modules.securityfilter.accesskey.AccessKeyFilter">
+        <property name="urlPatterns" value="/*" />
+        <property name="accessKeyConfig" ref="org.jahia.modules.securityfilter.accesskey.AccessKeyConfig"/>
+    </bean>
+
+    <bean id="rootTokenAuthValve" class="org.jahia.modules.securityfilter.accesskey.valves.AccessKeyAuthValve">
+        <property name="position" value="4"/>
+        <property name="authPipeline" ref="authPipeline"/>
+        <property name="accessKeyConfig" ref="org.jahia.modules.securityfilter.accesskey.AccessKeyConfig"/>
+    </bean>
+
+    <!--End Access Key-->
 </beans>

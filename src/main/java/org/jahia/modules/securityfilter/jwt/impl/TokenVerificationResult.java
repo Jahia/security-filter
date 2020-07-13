@@ -44,6 +44,7 @@
 package org.jahia.modules.securityfilter.jwt.impl;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
+import org.jahia.modules.securityfilter.accesskey.AccessKey;
 
 public class TokenVerificationResult {
 
@@ -56,6 +57,7 @@ public class TokenVerificationResult {
     private VerificationStatus verificationStatusCode;
     private String message;
     private DecodedJWT token;
+    private AccessKey accessKey;
 
     public VerificationStatus getVerificationStatusCode() {
         return verificationStatusCode;
@@ -79,5 +81,13 @@ public class TokenVerificationResult {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public AccessKey getAccessKey() {
+        return accessKey;
+    }
+
+    public void setAccessKey(AccessKey accessKey) {
+        this.accessKey = accessKey;
     }
 }

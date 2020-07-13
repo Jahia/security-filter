@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<permissions xmlns:jcr="http://www.jcp.org/jcr/1.0"
+             xmlns:j="http://www.jahia.org/jahia/1.0">
+
+    <canManageAPIKeys jcr:primaryType="jnt:permission"/>
+
+</permissions>

@@ -3,3 +3,22 @@
 <jmix = 'http://www.jahia.org/jahia/mix/1.0'>
 <jnt = 'http://www.jahia.org/jahia/nt/1.0'>
 <mix = 'http://www.jcp.org/jcr/mix/1.0'>
+
+[sfnt:accessKeys] > nt:base
++ * (sfnt:accessKey) = sfnt:accessKey
+
+[sfnt:accessKey] > jnt:content
+- active (boolean) = true indexed=no
+- superkey (boolean) = false indexed=no
+- accessId (string)
+- accessKey (string) indexed=no
+- type (string) indexed=no
+- scopes (string) multiple indexed=no
+- ips (string) multiple indexed=no
+- referrers (string) multiple indexed=no
+- paths (string) multiple indexed=no
+- apis (string) multiple indexed=no
+- nodeTypes (string) multiple indexed=no
+- user (weakreference)
+- userKey (string)
+- workspaces (string) multiple indexed=no

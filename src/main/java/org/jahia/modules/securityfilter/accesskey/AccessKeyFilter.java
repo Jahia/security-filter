@@ -41,33 +41,31 @@
  *     If you are unsure which license is appropriate for your use,
  *     please contact the sales department at sales@jahia.com.
  */
-package org.jahia.modules.securityfilter.jwt.impl;
+package org.jahia.modules.securityfilter.accesskey;
 
-import com.auth0.jwt.interfaces.DecodedJWT;
 import org.apache.commons.lang.StringUtils;
 import org.jahia.bin.filters.AbstractServletFilter;
+import org.jahia.modules.securityfilter.accesskey.valves.AccessKeyAuthValve;
+import org.jahia.modules.securityfilter.jwt.impl.TokenVerificationResult;
+import org.jahia.services.content.JCRTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jcr.RepositoryException;
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.List;
 
-public class JWTFilter extends AbstractServletFilter {
+public class AccessKeyFilter extends AbstractServletFilter {
 
-    private static final Logger logger = LoggerFactory.getLogger(JWTFilter.class);
+    private static final Logger logger = LoggerFactory.getLogger(AccessKeyFilter.class);
 
-    private static final String BEARER = "Bearer";
-    private JWTConfig jwtConfig;
-    private static final ThreadLocal<TokenVerificationResult> THREAD_LOCAL = new ThreadLocal<TokenVerificationResult>();
+    private AccessKeyConfig accessKeyConfig;
+    private JCRTemplate jcrTemplate;
 
-    public static TokenVerificationResult getJWTTokenVerificationStatus() {
-        return THREAD_LOCAL.get();
-    }
-
-    public void setJwtConfig(JWTConfig jwtConfig) {
-        this.jwtConfig = jwtConfig;
+    public void setAccessKeyConfig(AccessKeyConfig accessKeyConfig) {
+        this.accessKeyConfig = accessKeyConfig;
     }
 
     @Override
@@ -78,57 +76,47 @@ public class JWTFilter extends AbstractServletFilter {
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
         HttpServletRequest httpRequest = (HttpServletRequest) servletRequest;
-        String authorization = httpRequest.getHeader("Authorization");
+        TokenVerificationResult tvr = AccessKeyAuthValve.getAccessKeyVerificationStatus();
 
-        TokenVerificationResult tvr = new TokenVerificationResult();
+        if (tvr == null) {
+            filterChain.doFilter(httpRequest, servletResponse);
+            return;
+        }
 
-        tvr.setToken(null);
-        tvr.setVerificationStatusCode(TokenVerificationResult.VerificationStatus.NOT_FOUND);
-        tvr.setMessage("Token not found");
-        THREAD_LOCAL.set(tvr);
+        AccessKey accessKey = tvr.getAccessKey();
 
-        if (authorization != null && authorization.contains(BEARER)) {
-            String token = StringUtils.substringAfter(authorization, BEARER).trim();
+        // Make sure token is set so that PermissionsConfig recognizes request as access key request
+        tvr.setVerificationStatusCode(TokenVerificationResult.VerificationStatus.REJECTED);
 
-            try {
-                DecodedJWT decodedToken = jwtConfig.verifyToken(token);
+        System.out.println("Verified accessKey: " + accessKey.isVerified());
 
-                String referer = httpRequest.getHeader("referer");
-                List<String> claimReferers =decodedToken.getClaim("referer").asList(String.class);
-                //return ;
-                String ip = httpRequest.getHeader("X-FORWARDED-FOR") != null
-                        ? httpRequest.getHeader("X-FORWARDED-FOR") : httpRequest.getRemoteAddr();
-                List<String> ips = decodedToken.getClaim("ips").asList(String.class);
+        if (accessKey.isVerified()) {
+            String referer = httpRequest.getHeader("referer");
+            String ip = httpRequest.getHeader("X-FORWARDED-FOR") != null ? httpRequest.getHeader("X-FORWARDED-FOR") : httpRequest.getRemoteAddr();
 
-                //Check referers
-                if (claimReferers != null && !claimReferers.isEmpty() && !checkReferer(claimReferers, referer)) {
-                    tvr.setVerificationStatusCode(TokenVerificationResult.VerificationStatus.REJECTED);
-                    tvr.setMessage("Incorrect referer in token");
-                }
-                //Check IP
-                else if (ips != null && !ips.isEmpty() && !ips.contains(ip)) {
-                    tvr.setVerificationStatusCode(TokenVerificationResult.VerificationStatus.REJECTED);
-                    tvr.setMessage("Your IP did not match any of the permitted IPs");
-                }
-                else {
-                    tvr.setToken(decodedToken);
-                    tvr.setVerificationStatusCode(TokenVerificationResult.VerificationStatus.VERIFIED);
-                    tvr.setMessage("Token verified");
-                }
-            }
-            catch (Exception e) {
+            List<String> referrers = accessKey.getReferrers();
+            List<String> ips = accessKey.getIps();
+            if (referrers != null && !referrers.isEmpty() && !checkReferer(referrers, referer)) {
                 tvr.setVerificationStatusCode(TokenVerificationResult.VerificationStatus.REJECTED);
-                tvr.setMessage("Failed to verify token");
-                logger.error("Failed to verify JWT token: {}", e.getMessage());
+                tvr.setMessage("Incorrect referer in token");
+            } else if (ips != null && !ips.isEmpty() && !ips.contains(ip)) {
+                tvr.setVerificationStatusCode(TokenVerificationResult.VerificationStatus.REJECTED);
+                tvr.setMessage("Your IP did not match any of the permitted IPs");
+            } else {
+                tvr.setVerificationStatusCode(TokenVerificationResult.VerificationStatus.VERIFIED);
+                tvr.setMessage("Token verified");
             }
         }
 
         filterChain.doFilter(httpRequest, servletResponse);
-
-        THREAD_LOCAL.set(null);
+        AccessKeyAuthValve.removeThreadLocal();
     }
 
     private boolean checkReferer(List<String> claimReferers, String referer) {
+        if (referer == null) {
+            return false;
+        }
+
         for (String claimReferer : claimReferers) {
             if (referer.startsWith(claimReferer)) {
                 return true;
@@ -140,5 +128,13 @@ public class JWTFilter extends AbstractServletFilter {
     @Override
     public void destroy() {
         //Do nothing for now
+    }
+
+    public JCRTemplate getJcrTemplate() {
+        return jcrTemplate;
+    }
+
+    public void setJcrTemplate(JCRTemplate jcrTemplate) {
+        this.jcrTemplate = jcrTemplate;
     }
 }

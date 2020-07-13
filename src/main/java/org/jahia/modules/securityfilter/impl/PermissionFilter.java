@@ -76,12 +76,14 @@ public class PermissionFilter extends AbstractFilter {
     @Override
     public String prepare(RenderContext renderContext, Resource resource, RenderChain chain) throws Exception {
         // Bypass the check if a specific permission has been defined on the view through the requirePermissions property
+        System.out.println("PPP");
         if (hasViewRequirePermissions(renderContext)) {
             return null;
         }
 
         // Otherwise, check the API permissions rules
         String api = VIEW + "." + resource.getTemplateType() + "." + resource.getResolvedTemplate();
+        System.out.println("VIEW: " + api);
         if (!permissionsConfig.hasPermission(api, resource.getNode())) {
             throw new PermissionSecurityAccessDeniedException(api, resource.getPath());
         }

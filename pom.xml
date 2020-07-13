@@ -54,7 +54,7 @@
     </parent>
 
     <artifactId>security-filter</artifactId>
-    <version>2.1.0-SNAPSHOT</version>
+    <version>2.1.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <name>Jahia API security config and filter</name>
     <description>Jahia API security config and filter</description>
@@ -103,48 +103,18 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        <!-- Jackson -->
+
         <dependency>
-            <groupId>com.fasterxml.jackson.jaxrs</groupId>
-            <artifactId>jackson-jaxrs-json-provider</artifactId>
-            <version>${jackson.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish.jersey.bundles</groupId>
-            <artifactId>jaxrs-ri</artifactId>
-            <version>${jersey.version}</version>
+            <groupId>org.jahia.modules</groupId>
+            <artifactId>graphql-dxm-provider</artifactId>
+            <version>2.0.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.glassfish.jersey.media</groupId>
-            <artifactId>jersey-media-multipart</artifactId>
-            <version>${jersey.version}</version>
+            <groupId>io.github.graphql-java</groupId>
+            <artifactId>graphql-java-annotations</artifactId>
+            <version>6.0.0-jahia1</version>
             <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-core</artifactId>
-            <version>${jackson.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-annotations</artifactId>
-            <version>${jackson-annotations.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>${jackson.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.jaxrs</groupId>
-            <artifactId>jackson-jaxrs-base</artifactId>
-            <version>${jackson.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.module</groupId>
-            <artifactId>jackson-module-jaxb-annotations</artifactId>
-            <version>${jackson.version}</version>
         </dependency>
     </dependencies>
 
@@ -156,11 +126,10 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
+                        <_dsannotations>*</_dsannotations>
                         <Import-Package>${jahia.plugin.projectPackageImport},
                             *</Import-Package>
                         <Export-Package>org.jahia.modules.securityfilter,com.auth0.jwt.interfaces</Export-Package>
-                        <JAX-RS-Alias>/security-filter</JAX-RS-Alias>
-                        <JAX-RS-Application>org.jahia.modules.securityfilter.api.SecurityFilterApiApplication</JAX-RS-Application>
                     </instructions>
                 </configuration>
             </plugin>
