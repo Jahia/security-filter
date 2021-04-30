@@ -41,7 +41,7 @@
  *     If you are unsure which license is appropriate for your use,
  *     please contact the sales department at sales@jahia.com.
  */
-package org.jahia.modules.securityfilter.jwt.impl;
+package org.jahia.modules.securityfilter.jwt;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
 
@@ -53,9 +53,9 @@ public class TokenVerificationResult {
         NOT_FOUND
     }
 
-    private VerificationStatus verificationStatusCode;
-    private String message;
-    private DecodedJWT token;
+    private VerificationStatus verificationStatusCode = VerificationStatus.NOT_FOUND;
+    private String message = "Token not found";
+    private DecodedJWT token = null;
 
     public VerificationStatus getVerificationStatusCode() {
         return verificationStatusCode;

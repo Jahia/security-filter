@@ -7,22 +7,31 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
                         http://www.eclipse.org/gemini/blueprint/schema/blueprint http://www.eclipse.org/gemini/blueprint/schema/blueprint/gemini-blueprint.xsd">
 
-    <bean id="org.jahia.modules.securityfilter.impl.PermissionsConfig" class="org.jahia.modules.securityfilter.impl.PermissionsConfig">
+    <bean id="org.jahia.modules.securityfilter.legacy.PermissionsConfig" class="org.jahia.modules.securityfilter.legacy.PermissionsConfig">
         <property name="restrictedAccessPermissionFallbackName" value="${jahia.rest.restrictedAccessPermissionName:jcr:addChildNodes_default}"/>
         <property name="restrictedAccessPermissionName" value="${jahia.rest.restrictedAccessPermissionName:api-access}"/>
     </bean>
 
-    <bean id="permissionRenderFilter" class="org.jahia.modules.securityfilter.impl.PermissionFilter">
+    <bean id="org.jahia.modules.securityfilter.core.AuthorizationConfig" class="org.jahia.modules.securityfilter.core.AuthorizationConfig">
+
+    </bean>
+
+    <bean id="org.jahia.modules.securityfilter.core.PermissionServiceImpl" class="org.jahia.modules.securityfilter.core.PermissionServiceImpl">
+        <property name="scopesContext" ref="scopesContext"/>
+        <property name="legacyPermissionsConfig" ref="org.jahia.modules.securityfilter.legacy.PermissionsConfig"/>
+    </bean>
+
+    <bean id="permissionRenderFilter" class="org.jahia.modules.securityfilter.views.PermissionFilter">
         <property name="description" value="Filter that checks permission configuration before rendering a view"/>
-        <property name="permissionsConfig" ref="org.jahia.modules.securityfilter.impl.PermissionsConfig"/>
+        <property name="permissionsConfig" ref="org.jahia.modules.securityfilter.legacy.PermissionsConfig"/>
         <property name="priority" value="26"/>
         <property name="applyOnTemplateTypes" value="json,html"/>
         <property name="applyOnConfigurations" value="page"/>
     </bean>
 
-    <osgi:service interface="org.jahia.modules.securityfilter.PermissionService" ref="org.jahia.modules.securityfilter.impl.PermissionsConfig" />
+    <osgi:service interface="org.jahia.modules.securityfilter.PermissionService" ref="org.jahia.modules.securityfilter.core.PermissionServiceImpl" />
 
-    <osgi:service interface="org.osgi.service.cm.ManagedServiceFactory" ref="org.jahia.modules.securityfilter.impl.PermissionsConfig">
+    <osgi:service interface="org.osgi.service.cm.ManagedServiceFactory" ref="org.jahia.modules.securityfilter.legacy.PermissionsConfig">
         <osgi:service-properties>
             <entry key="service.pid" value="org.jahia.modules.api.permissions"/>
             <entry key="service.description" value="JCREST-API configuration service"/>
@@ -30,23 +39,44 @@
         </osgi:service-properties>
     </osgi:service>
 
+    <osgi:service interface="org.osgi.service.cm.ManagedServiceFactory" ref="org.jahia.modules.securityfilter.core.AuthorizationConfig">
+        <osgi:service-properties>
+            <entry key="service.pid" value="org.jahia.modules.api.authorization"/>
+            <entry key="service.description" value="API authorization configuration service"/>
+            <entry key="service.vendor" value="Jahia Solutions Group SA"/>
+        </osgi:service-properties>
+    </osgi:service>
 
     <!--JWT-->
 
-    <bean id="jwtFilter" class="org.jahia.modules.securityfilter.jwt.impl.JWTFilter">
-        <property name="jwtConfig" ref="org.jahia.modules.securityfilter.jwt.impl.JWTConfig"/>
+    <bean id="scopesFilter" class="org.jahia.modules.securityfilter.core.ScopesFilter">
+        <property name="order" value="-1"/>
+        <property name="scopesContext" ref="scopesContext"/>
         <property name="urlPatterns" value="/*" />
     </bean>
 
-    <bean id="org.jahia.modules.securityfilter.jwt.impl.JWTConfig" class="org.jahia.modules.securityfilter.jwt.impl.JWTConfig"/>
+    <bean id="jwtFilter" class="org.jahia.modules.securityfilter.jwt.JWTFilter">
+        <property name="jwtConfig" ref="org.jahia.modules.securityfilter.jwt.JWTConfig"/>
+        <property name="urlPatterns" value="/*" />
+    </bean>
 
-    <osgi:service interface="org.jahia.modules.securityfilter.JWTService" ref="org.jahia.modules.securityfilter.jwt.impl.JWTConfig" />
+    <bean id="org.jahia.modules.securityfilter.jwt.JWTConfig" class="org.jahia.modules.securityfilter.jwt.JWTConfig"/>
 
-    <osgi:service interface="org.osgi.service.cm.ManagedService" ref="org.jahia.modules.securityfilter.jwt.impl.JWTConfig">
+    <osgi:service interface="org.jahia.modules.securityfilter.JWTService" ref="org.jahia.modules.securityfilter.jwt.JWTConfig" />
+
+    <osgi:service interface="org.osgi.service.cm.ManagedService" ref="org.jahia.modules.securityfilter.jwt.JWTConfig">
         <osgi:service-properties>
             <entry key="service.pid" value="org.jahia.modules.jwt.token"/>
             <entry key="service.description" value="JWT token configuration service"/>
             <entry key="service.vendor" value="Jahia Solutions Group SA"/>
+        </osgi:service-properties>
+    </osgi:service>
+
+    <bean id="scopesContext" class="org.jahia.modules.securityfilter.ScopesContext" factory-method="getInstance"/>
+
+    <osgi:service interface="org.osgi.service.cm.ManagedService" ref="scopesContext">
+        <osgi:service-properties>
+            <entry key="service.pid" value="org.jahia.modules.api.context"/>
         </osgi:service-properties>
     </osgi:service>
 

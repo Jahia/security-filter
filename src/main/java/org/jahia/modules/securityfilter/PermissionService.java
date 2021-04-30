@@ -43,6 +43,10 @@
  */
 package org.jahia.modules.securityfilter;
 
+import org.jahia.modules.securityfilter.legacy.PermissionsConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 
@@ -50,6 +54,9 @@ import javax.jcr.RepositoryException;
  * Content access check service.
  */
 public interface PermissionService {
+
+    public boolean hasPermission(String api);
+
     /**
      * Checks if the current user has access to the specified node using the provided API key (used in configuration rules).
      * 
