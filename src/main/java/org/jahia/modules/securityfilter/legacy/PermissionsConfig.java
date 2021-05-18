@@ -282,8 +282,8 @@ public class PermissionsConfig implements ManagedServiceFactory, InitializingBea
         for (Permission permission : permissions) {
             JCRNodeWrapper targetNode = jcrNode != null ? jcrNode : getDefaultTargetNode();
 
-            if (!workspaceMatches(jcrNode, permission) || !apiMatches(apiToCheck, permission)
-                    || !pathMatches(jcrNode, permission) || !nodeTypeMatches(jcrNode, permission)
+            if (!workspaceMatches(targetNode, permission) || !apiMatches(apiToCheck, permission)
+                    || !pathMatches(targetNode, permission) || !nodeTypeMatches(targetNode, permission)
                     || !tokenMatches(permission.getScopes()) || !permissionMatches(permission.getPermission(), targetNode)) {
                 continue;
             }
@@ -297,9 +297,12 @@ public class PermissionsConfig implements ManagedServiceFactory, InitializingBea
             } else if (!tokenMatches(permission.getRequiredScopes())) {
                 return false;
             }
+            logger.debug("Permission {} on {} granted by {}", apiToCheck, jcrNode, permission);
             return true;
         }
-        return true;
+
+        logger.debug("Permission {} on {} granted by default", apiToCheck, jcrNode);
+        return false;
     }
 
     private JCRNodeWrapper getDefaultTargetNode() throws RepositoryException {

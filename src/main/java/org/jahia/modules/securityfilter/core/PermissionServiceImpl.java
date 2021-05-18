@@ -1,20 +1,23 @@
 package org.jahia.modules.securityfilter.core;
 
 import org.jahia.modules.securityfilter.PermissionService;
-import org.jahia.modules.securityfilter.ScopesContext;
+import org.jahia.modules.securityfilter.ScopesHolder;
 import org.jahia.modules.securityfilter.legacy.PermissionsConfig;
-import org.jahia.services.content.JCRNodeWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 public class PermissionServiceImpl implements PermissionService {
     private static final Logger logger = LoggerFactory.getLogger(PermissionService.class);
-    private ScopesContext scopesContext;
+    private ScopesHolder scopesContext;
 
+    private AuthorizationConfig authorizationConfig;
     private PermissionsConfig legacyPermissionsConfig;
 
     @Override
@@ -23,32 +26,44 @@ public class PermissionServiceImpl implements PermissionService {
             throw new IllegalArgumentException("Must pass an api name");
         }
 
-        Collection<String> scopes = scopesContext.getScopes();
-
-        return false;
+        return hasPermission(Collections.singletonMap("api", apiToCheck));
     }
 
     @Override
-    public boolean hasPermission(String apiToCheck, Node node) throws RepositoryException {
+    public boolean hasPermission(String apiToCheck, Node node) {
         if (apiToCheck == null) {
             throw new IllegalArgumentException("Must pass an api name");
         }
 
-        boolean hasPermission = legacyPermissionsConfig.hasPermission(apiToCheck, (JCRNodeWrapper) node);
+        Map<String, Object> query = new HashMap();
+        query.put("api", apiToCheck);
+        query.put("node", node);
+
+        return hasPermission(query);
+    }
+
+    @Override
+    public boolean hasPermission(Map<String, Object> query) {
+        if (query == null) {
+            throw new IllegalArgumentException("Must pass a valid api query");
+        }
+
+        boolean hasPermission = false;
+        //legacyPermissionsConfig.hasPermission(apiToCheck, (JCRNodeWrapper) node);
 
         // Also look into new authorization rules
+        authorizationConfig.hasPermission(query);
 
-        String nodePath = node != null ? node.getPath() : "global";
         if (hasPermission) {
-            logger.debug("Checking api permission '{}' for {}: GRANTED", apiToCheck, nodePath);
+            logger.debug("Checking api permission '{}' for {}: GRANTED", query);
         } else {
-            logger.debug("Checking api permission '{}' for {}: DENIED", apiToCheck, nodePath);
+            logger.debug("Checking api permission '{}' for {}: DENIED", query);
         }
 
         return hasPermission;
     }
 
-    public void setScopesContext(ScopesContext scopesContext) {
+    public void setScopesContext(ScopesHolder scopesContext) {
         this.scopesContext = scopesContext;
     }
 
@@ -56,5 +71,7 @@ public class PermissionServiceImpl implements PermissionService {
         this.legacyPermissionsConfig = legacyPermissionsConfig;
     }
 
-
+    public void setAuthorizationConfig(AuthorizationConfig authorizationConfig) {
+        this.authorizationConfig = authorizationConfig;
+    }
 }

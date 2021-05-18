@@ -1,14 +1,14 @@
 package org.jahia.modules.securityfilter.core;
 
 import org.jahia.bin.filters.AbstractServletFilter;
-import org.jahia.modules.securityfilter.ScopesContext;
+import org.jahia.modules.securityfilter.ScopesHolder;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 
-public class ScopesFilter extends AbstractServletFilter {
-    private ScopesContext scopesContext;
+public class ContextFilter extends AbstractServletFilter {
+    private ScopesHolder scopesHolder = ScopesHolder.getInstance();
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
@@ -20,12 +20,12 @@ public class ScopesFilter extends AbstractServletFilter {
         String origin = ((HttpServletRequest)request).getHeader("Origin");
         //Todo : Detect context
         if ("http://localhost:8080".equals(origin)) {
-            scopesContext.addContext("hosted-context");
+            scopesHolder.addContext("hosted-context");
         }
 
         chain.doFilter(request, response);
 
-        scopesContext.resetScopes();
+        scopesHolder.resetScopes();
     }
 
     @Override
@@ -33,7 +33,7 @@ public class ScopesFilter extends AbstractServletFilter {
 
     }
 
-    public void setScopesContext(ScopesContext scopesContext) {
-        this.scopesContext = scopesContext;
+    public void setScopesHolder(ScopesHolder scopesHolder) {
+        this.scopesHolder = scopesHolder;
     }
 }

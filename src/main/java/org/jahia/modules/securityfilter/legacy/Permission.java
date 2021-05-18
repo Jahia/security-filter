@@ -147,4 +147,20 @@ public class Permission {
     public void setPriority(int priority) {
         this.priority = priority;
     }
+
+    @Override
+    public String toString() {
+        return "Permission{" +
+                "access=" + access +
+                ", requiredPermission='" + requiredPermission + '\'' +
+                ", permission='" + permission + '\'' +
+                ", apis=" + apis +
+                ", workspaces=" + workspaces +
+                ", pathPatterns=" + pathPatterns +
+                ", nodeTypes=" + nodeTypes +
+                ", scopes=" + scopes +
+                ", requiredScopes=" + requiredScopes +
+                ", priority=" + priority +
+                '}';
+    }
 }

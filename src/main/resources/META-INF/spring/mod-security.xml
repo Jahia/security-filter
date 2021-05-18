@@ -18,6 +18,7 @@
 
     <bean id="org.jahia.modules.securityfilter.core.PermissionServiceImpl" class="org.jahia.modules.securityfilter.core.PermissionServiceImpl">
         <property name="scopesContext" ref="scopesContext"/>
+        <property name="authorizationConfig" ref="org.jahia.modules.securityfilter.core.AuthorizationConfig"/>
         <property name="legacyPermissionsConfig" ref="org.jahia.modules.securityfilter.legacy.PermissionsConfig"/>
     </bean>
 
@@ -49,9 +50,9 @@
 
     <!--JWT-->
 
-    <bean id="scopesFilter" class="org.jahia.modules.securityfilter.core.ScopesFilter">
+    <bean id="scopesFilter" class="org.jahia.modules.securityfilter.core.ContextFilter">
         <property name="order" value="-1"/>
-        <property name="scopesContext" ref="scopesContext"/>
+        <property name="scopesHolder" ref="scopesContext"/>
         <property name="urlPatterns" value="/*" />
     </bean>
 
@@ -72,7 +73,7 @@
         </osgi:service-properties>
     </osgi:service>
 
-    <bean id="scopesContext" class="org.jahia.modules.securityfilter.ScopesContext" factory-method="getInstance"/>
+    <bean id="scopesContext" class="org.jahia.modules.securityfilter.ScopesHolder" factory-method="getInstance"/>
 
     <osgi:service interface="org.osgi.service.cm.ManagedService" ref="scopesContext">
         <osgi:service-properties>

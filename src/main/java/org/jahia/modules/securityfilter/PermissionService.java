@@ -49,17 +49,34 @@ import org.slf4j.LoggerFactory;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import java.util.Map;
 
 /**
  * Content access check service.
  */
 public interface PermissionService {
 
-    public boolean hasPermission(String api);
+    /**
+     * Checks if the current user has access to the specified API.
+     *
+     * @param query the object describing the api call
+     * @return <code>true</code> if the current user is allowed to access the api; <code>false</code> otherwise
+     * @throws RepositoryException in case of an error during permission check
+     */
+    public boolean hasPermission(Map<String, Object> query);
+
+    /**
+     * Checks if the current user has access to the specified API key.
+     * 
+     * @param api the API key to test access
+     * @return <code>true</code> if the current user is allowed to access the api; <code>false</code> otherwise
+     * @throws RepositoryException in case of an error during permission check
+     */
+    public boolean hasPermission(String api) throws RepositoryException;
 
     /**
      * Checks if the current user has access to the specified node using the provided API key (used in configuration rules).
-     * 
+     *
      * @param api the API key to test access
      * @param node the requested JCR node, or null to test the permission globally
      * @return <code>true</code> if the current user is allowed to access the api; <code>false</code> otherwise

@@ -6,12 +6,12 @@ import org.osgi.service.cm.ManagedService;
 
 import java.util.*;
 
-public class ScopesContext implements ManagedService {
+public class ScopesHolder implements ManagedService {
 
     private Map<String, Collection<String>> contexts = new HashMap<>();
     private ThreadLocal<Set<String>> scopesLocal = ThreadLocal.withInitial(HashSet::new);
 
-    public static ScopesContext getInstance() {
+    public static ScopesHolder getInstance() {
         return Holder.INSTANCE;
     }
 
@@ -43,7 +43,7 @@ public class ScopesContext implements ManagedService {
     }
 
     private static class Holder {
-        static final ScopesContext INSTANCE = new ScopesContext();
+        static final ScopesHolder INSTANCE = new ScopesHolder();
 
         private Holder() {
         }
