@@ -1,0 +1,32 @@
+- scope: graphql
+  description: Can access graphql API
+  contexts: hosted-context
+  grants:
+    - api:
+        include: graphql
+        exclude: graphql.Query.admin
+
+- scope: graphql-privileged
+  description: Can access graphql API (privileged users)
+  contexts: hosted-context
+  user:
+    privileged: true
+  grants:
+    - api: graphql
+
+- scope: access-category
+  description: Can access category tree
+  contexts: hosted-context
+  grants:
+    - node:
+        nodeType: jnt:category
+
+- scope: site-tree
+  description: Can access site tree
+  contexts: hosted-context
+  grants:
+    - api: view.json.treeRootItem
+      node:
+        nodeType: jnt:virtualsite
+        pathPattern: /sites/.*
+

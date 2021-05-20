@@ -48,8 +48,6 @@
         </osgi:service-properties>
     </osgi:service>
 
-    <!--JWT-->
-
     <bean id="scopesFilter" class="org.jahia.modules.securityfilter.core.ContextFilter">
         <property name="order" value="-1"/>
         <property name="scopesHolder" ref="scopesContext"/>
@@ -74,12 +72,4 @@
     </osgi:service>
 
     <bean id="scopesContext" class="org.jahia.modules.securityfilter.ScopesHolder" factory-method="getInstance"/>
-
-    <osgi:service interface="org.osgi.service.cm.ManagedService" ref="scopesContext">
-        <osgi:service-properties>
-            <entry key="service.pid" value="org.jahia.modules.api.context"/>
-        </osgi:service-properties>
-    </osgi:service>
-
-    <!--End JWT-->
 </beans>

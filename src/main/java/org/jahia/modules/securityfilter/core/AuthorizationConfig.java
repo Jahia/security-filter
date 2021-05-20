@@ -1,15 +1,11 @@
 package org.jahia.modules.securityfilter.core;
 
 import org.jahia.modules.securityfilter.ScopesHolder;
-import org.jahia.modules.securityfilter.core.grants.Grant;
-import org.jahia.services.content.JCRNodeWrapper;
-import org.jahia.services.modulemanager.util.PropertiesList;
 import org.jahia.services.modulemanager.util.PropertiesManager;
 import org.jahia.services.modulemanager.util.PropertiesValues;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedServiceFactory;
 
-import javax.jcr.RepositoryException;
 import java.util.*;
 
 public class AuthorizationConfig implements ManagedServiceFactory {
@@ -29,28 +25,37 @@ public class AuthorizationConfig implements ManagedServiceFactory {
         PropertiesManager pm = new PropertiesManager(getMap(properties));
 
         PropertiesValues values = pm.getValues();
-        String scopeName = values.getProperty("scope");
-        String scopeDescription = values.getProperty("description");
-        ScopeDefinition definition = new ScopeDefinition(scopeName, scopeDescription);
-        PropertiesList grantsValues = values.getList("grants");
-        int size = grantsValues.getSize();
-        for (int i = 0; i < size; i++) {
-            PropertiesValues grantValues = grantsValues.getValues(i);
-            definition.addGrant(Grant.build(grantValues));
+        Set<String> keys = values.getKeys();
+
+        for (String key : keys) {
+            PropertiesValues grantValues = values.getValues(key);
+            ScopeDefinition definition = new ScopeDefinition(key, grantValues);
+
+            scopes.put(definition.getScopeName(), definition);
+            scopesByPid.put(pid, definition);
+
+            for (String context : definition.getContexts()) {
+                scopesHolder.addScopeInContext(context, definition.getScopeName());
+            }
         }
 
-        scopes.put(scopeName, definition);
-        scopesByPid.put(pid, definition);
     }
 
     @Override
     public void deleted(String pid) {
         ScopeDefinition definition = scopesByPid.remove(pid);
         scopes.remove(definition.getScopeName());
+
+        for (String context : definition.getContexts()) {
+            scopesHolder.removeScopeFromContext(context, definition.getScopeName());
+        }
     }
 
     public boolean hasPermission(Map<String, Object> query) {
-        return scopesHolder.getScopes().stream().map(scopes::get).filter(Objects::nonNull).anyMatch(p -> p.isGrantAccess(query));
+        return scopesHolder.getScopes().stream().map(scopes::get)
+                .filter(Objects::nonNull)
+                .filter(ScopeDefinition::isValidForUser)
+                .anyMatch(p -> p.isGrantAccess(query));
     }
 
     private Map<String, String> getMap(Dictionary<String, ?> d) {

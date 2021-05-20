@@ -7,8 +7,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.Node;
-import javax.jcr.RepositoryException;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -52,7 +50,7 @@ public class PermissionServiceImpl implements PermissionService {
         //legacyPermissionsConfig.hasPermission(apiToCheck, (JCRNodeWrapper) node);
 
         // Also look into new authorization rules
-        authorizationConfig.hasPermission(query);
+        hasPermission = authorizationConfig.hasPermission(query);
 
         if (hasPermission) {
             logger.debug("Checking api permission '{}' for {}: GRANTED", query);
