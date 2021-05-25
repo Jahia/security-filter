@@ -13,11 +13,12 @@
     </bean>
 
     <bean id="org.jahia.modules.securityfilter.core.AuthorizationConfig" class="org.jahia.modules.securityfilter.core.AuthorizationConfig">
-
+        <property name="authorizationScopesService" ref="org.jahia.modules.securityfilter.core.AuthorizationScopesServiceImpl"/>
     </bean>
 
+    <bean id="org.jahia.modules.securityfilter.core.AuthorizationScopesServiceImpl" class="org.jahia.modules.securityfilter.core.AuthorizationScopesServiceImpl"/>
+
     <bean id="org.jahia.modules.securityfilter.core.PermissionServiceImpl" class="org.jahia.modules.securityfilter.core.PermissionServiceImpl">
-        <property name="scopesContext" ref="scopesContext"/>
         <property name="authorizationConfig" ref="org.jahia.modules.securityfilter.core.AuthorizationConfig"/>
         <property name="legacyPermissionsConfig" ref="org.jahia.modules.securityfilter.legacy.PermissionsConfig"/>
     </bean>
@@ -50,12 +51,13 @@
 
     <bean id="scopesFilter" class="org.jahia.modules.securityfilter.core.ContextFilter">
         <property name="order" value="-1"/>
-        <property name="scopesHolder" ref="scopesContext"/>
+        <property name="authorizationScopesService" ref="org.jahia.modules.securityfilter.core.AuthorizationScopesServiceImpl"/>
         <property name="urlPatterns" value="/*" />
     </bean>
 
     <bean id="jwtFilter" class="org.jahia.modules.securityfilter.jwt.JWTFilter">
         <property name="jwtConfig" ref="org.jahia.modules.securityfilter.jwt.JWTConfig"/>
+        <property name="authorizationScopesService" ref="org.jahia.modules.securityfilter.core.AuthorizationScopesServiceImpl"/>
         <property name="urlPatterns" value="/*" />
     </bean>
 
@@ -71,5 +73,5 @@
         </osgi:service-properties>
     </osgi:service>
 
-    <bean id="scopesContext" class="org.jahia.modules.securityfilter.ScopesHolder" factory-method="getInstance"/>
+    <osgi:service interface="org.jahia.modules.securityfilter.AuthorizationScopesService" ref="org.jahia.modules.securityfilter.core.AuthorizationScopesServiceImpl" />
 </beans>

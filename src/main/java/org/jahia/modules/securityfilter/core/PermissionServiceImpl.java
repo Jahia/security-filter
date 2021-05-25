@@ -1,7 +1,6 @@
 package org.jahia.modules.securityfilter.core;
 
 import org.jahia.modules.securityfilter.PermissionService;
-import org.jahia.modules.securityfilter.ScopesHolder;
 import org.jahia.modules.securityfilter.legacy.PermissionsConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,7 +12,6 @@ import java.util.Map;
 
 public class PermissionServiceImpl implements PermissionService {
     private static final Logger logger = LoggerFactory.getLogger(PermissionService.class);
-    private ScopesHolder scopesContext;
 
     private AuthorizationConfig authorizationConfig;
     private PermissionsConfig legacyPermissionsConfig;
@@ -59,10 +57,6 @@ public class PermissionServiceImpl implements PermissionService {
         }
 
         return hasPermission;
-    }
-
-    public void setScopesContext(ScopesHolder scopesContext) {
-        this.scopesContext = scopesContext;
     }
 
     public void setLegacyPermissionsConfig(PermissionsConfig legacyPermissionsConfig) {

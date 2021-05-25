@@ -1,15 +1,12 @@
-package org.jahia.modules.securityfilter;
+package org.jahia.modules.securityfilter.core;
+
+import org.jahia.modules.securityfilter.AuthorizationScopesService;
 
 import java.util.*;
 
-public class ScopesHolder {
-
+public class AuthorizationScopesServiceImpl implements AuthorizationScopesService {
     private Map<String, Collection<String>> contexts = new HashMap<>();
     private ThreadLocal<Set<String>> scopesLocal = ThreadLocal.withInitial(HashSet::new);
-
-    public static ScopesHolder getInstance() {
-        return Holder.INSTANCE;
-    }
 
     public Collection<String> getScopes() {
         return Collections.unmodifiableSet(scopesLocal.get());
@@ -40,10 +37,4 @@ public class ScopesHolder {
         }
     }
 
-    private static class Holder {
-        static final ScopesHolder INSTANCE = new ScopesHolder();
-
-        private Holder() {
-        }
-    }
 }

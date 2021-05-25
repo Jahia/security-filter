@@ -46,7 +46,7 @@ package org.jahia.modules.securityfilter.jwt;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import org.apache.commons.lang.StringUtils;
 import org.jahia.bin.filters.AbstractServletFilter;
-import org.jahia.modules.securityfilter.ScopesHolder;
+import org.jahia.modules.securityfilter.AuthorizationScopesService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,6 +65,12 @@ public class JWTFilter extends AbstractServletFilter {
 
     public static TokenVerificationResult getJWTTokenVerificationStatus() {
         return THREAD_LOCAL.get();
+    }
+
+    private AuthorizationScopesService authorizationScopesService;
+
+    public void setAuthorizationScopesService(AuthorizationScopesService authorizationScopesService) {
+        this.authorizationScopesService = authorizationScopesService;
     }
 
     public void setJwtConfig(JWTConfig jwtConfig) {
@@ -96,7 +102,7 @@ public class JWTFilter extends AbstractServletFilter {
                 if (tvr.getVerificationStatusCode() == TokenVerificationResult.VerificationStatus.VERIFIED) {
                     List<String> scopes = decodedToken.getClaim("scopes").asList(String.class);
                     if (scopes != null) {
-                        ScopesHolder.getInstance().addScopes(scopes);
+                        authorizationScopesService.addScopes(scopes);
                     }
                 }
             } catch (Exception e) {

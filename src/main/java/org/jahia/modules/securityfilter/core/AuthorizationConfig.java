@@ -1,6 +1,6 @@
 package org.jahia.modules.securityfilter.core;
 
-import org.jahia.modules.securityfilter.ScopesHolder;
+import org.jahia.modules.securityfilter.AuthorizationScopesService;
 import org.jahia.services.modulemanager.util.PropertiesManager;
 import org.jahia.services.modulemanager.util.PropertiesValues;
 import org.osgi.service.cm.ConfigurationException;
@@ -13,7 +13,11 @@ public class AuthorizationConfig implements ManagedServiceFactory {
     private Map<String, ScopeDefinition> scopes = new HashMap<>();
     private Map<String, ScopeDefinition> scopesByPid = new HashMap<>();
 
-    private ScopesHolder scopesHolder = ScopesHolder.getInstance();
+    private AuthorizationScopesService authorizationScopesService;
+
+    public void setAuthorizationScopesService(AuthorizationScopesService authorizationScopesService) {
+        this.authorizationScopesService = authorizationScopesService;
+    }
 
     @Override
     public String getName() {
@@ -35,7 +39,7 @@ public class AuthorizationConfig implements ManagedServiceFactory {
             scopesByPid.put(pid, definition);
 
             for (String context : definition.getContexts()) {
-                scopesHolder.addScopeInContext(context, definition.getScopeName());
+                authorizationScopesService.addScopeInContext(context, definition.getScopeName());
             }
         }
 
@@ -47,12 +51,12 @@ public class AuthorizationConfig implements ManagedServiceFactory {
         scopes.remove(definition.getScopeName());
 
         for (String context : definition.getContexts()) {
-            scopesHolder.removeScopeFromContext(context, definition.getScopeName());
+            authorizationScopesService.removeScopeFromContext(context, definition.getScopeName());
         }
     }
 
     public boolean hasPermission(Map<String, Object> query) {
-        return scopesHolder.getScopes().stream().map(scopes::get)
+        return authorizationScopesService.getScopes().stream().map(scopes::get)
                 .filter(Objects::nonNull)
                 .filter(ScopeDefinition::isValidForUser)
                 .anyMatch(p -> p.isGrantAccess(query));
