@@ -2,10 +2,12 @@ package org.jahia.modules.securityfilter.core;
 
 import org.jahia.modules.securityfilter.PermissionService;
 import org.jahia.modules.securityfilter.legacy.PermissionsConfig;
+import org.jahia.services.content.JCRNodeWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.Node;
+import javax.jcr.RepositoryException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -44,11 +46,13 @@ public class PermissionServiceImpl implements PermissionService {
             throw new IllegalArgumentException("Must pass a valid api query");
         }
 
-        boolean hasPermission = false;
-        //legacyPermissionsConfig.hasPermission(apiToCheck, (JCRNodeWrapper) node);
+        boolean hasPermission = authorizationConfig.hasPermission(query);
 
-        // Also look into new authorization rules
-        hasPermission = authorizationConfig.hasPermission(query);
+        try {
+            hasPermission = hasPermission || permissionsConfig.hasPermission((String) query.get("api"), (JCRNodeWrapper) query.get("node"));
+        } catch (RepositoryException e) {
+            e.printStackTrace();
+        }
 
         if (hasPermission) {
             logger.debug("Checking api permission '{}' for {}: GRANTED", query);

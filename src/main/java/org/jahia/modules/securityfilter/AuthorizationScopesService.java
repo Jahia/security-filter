@@ -1,7 +1,6 @@
 package org.jahia.modules.securityfilter;
 
 import java.util.Collection;
-import java.util.Collections;
 
 public interface AuthorizationScopesService {
 

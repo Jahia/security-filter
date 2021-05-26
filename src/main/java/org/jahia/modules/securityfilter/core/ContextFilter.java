@@ -6,6 +6,7 @@ import org.jahia.modules.securityfilter.AuthorizationScopesService;
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.net.URL;
 
 public class ContextFilter extends AbstractServletFilter {
 
@@ -22,10 +23,18 @@ public class ContextFilter extends AbstractServletFilter {
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        String origin = ((HttpServletRequest)request).getHeader("Origin");
-        //Todo : Detect context
-        if ("http://localhost:8080".equals(origin)) {
-            authorizationScopesService.addContext("hosted-context");
+        authorizationScopesService.addContext("default");
+
+        HttpServletRequest httpServletRequest = (HttpServletRequest) request;
+        String origin = httpServletRequest.getHeader("Origin");
+        if (origin == null) {
+            origin = httpServletRequest.getHeader("Referer");
+        }
+        if (origin != null) {
+            String host = new URL(origin).getHost();
+            if (host.equals(request.getServerName())) {
+                authorizationScopesService.addContext("hosted-context");
+            }
         }
 
         chain.doFilter(request, response);

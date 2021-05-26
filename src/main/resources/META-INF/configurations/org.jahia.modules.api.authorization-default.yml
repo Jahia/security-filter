@@ -25,7 +25,7 @@
   description: Can access site tree
   contexts: hosted-context
   grants:
-    - api: view.json.treeRootItem
+    - api: view.json.treeRootItem,jnt:folder,jnt:page,jnt:portlet,jnt:navMenuText
       node:
         nodeType: jnt:virtualsite
         pathPattern: /sites/.*

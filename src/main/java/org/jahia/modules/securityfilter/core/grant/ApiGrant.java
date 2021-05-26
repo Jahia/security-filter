@@ -3,7 +3,9 @@ package org.jahia.modules.securityfilter.core.grant;
 import org.jahia.modules.securityfilter.core.ParserHelper;
 import org.jahia.services.modulemanager.util.PropertiesValues;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Check pattern on the requested API

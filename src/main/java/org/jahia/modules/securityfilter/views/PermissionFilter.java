@@ -44,7 +44,6 @@
 package org.jahia.modules.securityfilter.views;
 
 import org.jahia.modules.securityfilter.PermissionService;
-import org.jahia.modules.securityfilter.legacy.PermissionsConfig;
 import org.jahia.services.render.RenderContext;
 import org.jahia.services.render.Resource;
 import org.jahia.services.render.filter.AbstractFilter;
