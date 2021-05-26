@@ -14,7 +14,7 @@ public class PermissionServiceImpl implements PermissionService {
     private static final Logger logger = LoggerFactory.getLogger(PermissionService.class);
 
     private AuthorizationConfig authorizationConfig;
-    private PermissionsConfig legacyPermissionsConfig;
+    private PermissionsConfig permissionsConfig;
 
     @Override
     public boolean hasPermission(String apiToCheck) {
@@ -59,8 +59,8 @@ public class PermissionServiceImpl implements PermissionService {
         return hasPermission;
     }
 
-    public void setLegacyPermissionsConfig(PermissionsConfig legacyPermissionsConfig) {
-        this.legacyPermissionsConfig = legacyPermissionsConfig;
+    public void setPermissionsConfig(PermissionsConfig permissionsConfig) {
+        this.permissionsConfig = permissionsConfig;
     }
 
     public void setAuthorizationConfig(AuthorizationConfig authorizationConfig) {

@@ -43,6 +43,7 @@
  */
 package org.jahia.modules.securityfilter.views;
 
+import org.jahia.modules.securityfilter.PermissionService;
 import org.jahia.modules.securityfilter.legacy.PermissionsConfig;
 import org.jahia.services.render.RenderContext;
 import org.jahia.services.render.Resource;
@@ -57,10 +58,10 @@ public class PermissionFilter extends AbstractFilter {
 
     private static final String VIEW = "view";
 
-    private PermissionsConfig permissionsConfig;
+    private PermissionService permissionService;
 
-    public void setPermissionsConfig(PermissionsConfig permissionsConfig) {
-        this.permissionsConfig = permissionsConfig;
+    public void setPermissionService(PermissionService permissionService) {
+        this.permissionService = permissionService;
     }
 
     @Override
@@ -83,7 +84,7 @@ public class PermissionFilter extends AbstractFilter {
 
         // Otherwise, check the API permissions rules
         String api = VIEW + "." + resource.getTemplateType() + "." + resource.getResolvedTemplate();
-        if (!permissionsConfig.hasPermission(api, resource.getNode())) {
+        if (!permissionService.hasPermission(api, resource.getNode())) {
             throw new PermissionSecurityAccessDeniedException(api, resource.getPath());
         }
         return null;
