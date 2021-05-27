@@ -17,6 +17,7 @@ import java.util.Set;
 public class ScopeDefinition {
     private static final Logger logger = LoggerFactory.getLogger(ScopeDefinition.class);
 
+    private String pid;
     private String scopeName;
     private String description;
     private Set<String> contexts;
@@ -25,7 +26,8 @@ public class ScopeDefinition {
 
     private Set<Grant> grants = new HashSet<>();
 
-    public ScopeDefinition(String key, PropertiesValues values) {
+    public ScopeDefinition(String pid, String key, PropertiesValues values) {
+        this.pid = pid;
         scopeName = key;
         description = values.getProperty("description");
         contexts = ParserHelper.buildSet(values, "contexts");
@@ -41,6 +43,10 @@ public class ScopeDefinition {
 
     public boolean isValidForUser() {
         return userConstraint == null || userConstraint.isValidForUser();
+    }
+
+    public String getPid() {
+        return pid;
     }
 
     public String getScopeName() {

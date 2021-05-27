@@ -7,11 +7,11 @@ import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedServiceFactory;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class AuthorizationConfig implements ManagedServiceFactory {
 
-    private Map<String, ScopeDefinition> scopes = new HashMap<>();
-    private Map<String, ScopeDefinition> scopesByPid = new HashMap<>();
+    private Collection<ScopeDefinition> scopes = new ArrayList<>();
 
     private AuthorizationScopesService authorizationScopesService;
 
@@ -33,10 +33,9 @@ public class AuthorizationConfig implements ManagedServiceFactory {
 
         for (String key : keys) {
             PropertiesValues grantValues = values.getValues(key);
-            ScopeDefinition definition = new ScopeDefinition(key, grantValues);
+            ScopeDefinition definition = new ScopeDefinition(pid, key, grantValues);
 
-            scopes.put(definition.getScopeName(), definition);
-            scopesByPid.put(pid, definition);
+            scopes.add(definition);
 
             for (String context : definition.getContexts()) {
                 authorizationScopesService.addScopeInContext(context, definition.getScopeName());
@@ -47,17 +46,19 @@ public class AuthorizationConfig implements ManagedServiceFactory {
 
     @Override
     public void deleted(String pid) {
-        ScopeDefinition definition = scopesByPid.remove(pid);
-        scopes.remove(definition.getScopeName());
-
-        for (String context : definition.getContexts()) {
-            authorizationScopesService.removeScopeFromContext(context, definition.getScopeName());
+        List<ScopeDefinition> toRemove = scopes.stream().filter(s -> s.getPid().equals(pid)).collect(Collectors.toList());
+        for (ScopeDefinition definition : toRemove) {
+            for (String context : definition.getContexts()) {
+                authorizationScopesService.removeScopeFromContext(context, definition.getScopeName());
+            }
         }
+        scopes.removeAll(toRemove);
     }
 
     public boolean hasPermission(Map<String, Object> query) {
-        return authorizationScopesService.getScopes().stream().map(scopes::get)
-                .filter(Objects::nonNull)
+        Collection<String> currentScopes = authorizationScopesService.getScopes();
+        return scopes.stream()
+                .filter(s -> currentScopes.contains(s.getScopeName()))
                 .filter(ScopeDefinition::isValidForUser)
                 .anyMatch(p -> p.isGrantAccess(query));
     }

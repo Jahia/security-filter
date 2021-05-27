@@ -39,3 +39,13 @@
   contexts: hosted-context
   grants:
     - api: view.html
+
+- scope: deploy_modules
+  description: Can manage modules deployment
+  user:
+    permission:
+      - name: adminTemplates
+      - path: /
+  grants:
+    - api: provisioning
+    - api: module_manager
