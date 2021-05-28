@@ -6,11 +6,12 @@ import org.jahia.services.modulemanager.util.PropertiesValues;
 import pl.touk.throwing.exception.WrappedException;
 
 import javax.jcr.RepositoryException;
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * Check for a permission on a specific node
  */
-public class PermissionConstraint implements UserConstraint {
+public class PermissionConstraint implements Constraint {
     private String nodePath;
     private String workspace;
     private String permission;
@@ -21,17 +22,16 @@ public class PermissionConstraint implements UserConstraint {
         this.permission = permission;
     }
 
-    public static UserConstraint build(PropertiesValues grantValues) {
-        PropertiesValues nodeValues = grantValues.getValues("permission");
-        if (nodeValues.getKeys().contains("name") && nodeValues.getKeys().contains("path")) {
-            return new PermissionConstraint(nodeValues.getProperty("path"), nodeValues.getProperty("workspace"), nodeValues.getProperty("name"));
+    public static Constraint build(PropertiesValues grantValues) {
+        if (grantValues.getKeys().contains("user_permission") && grantValues.getKeys().contains("path")) {
+            return new PermissionConstraint(grantValues.getProperty("path"), grantValues.getProperty("workspace"), grantValues.getProperty("user_permission"));
         }
 
         return null;
     }
 
     @Override
-    public boolean isValidForUser() {
+    public boolean isValid(HttpServletRequest request) {
         try {
             JCRNodeWrapper node = JCRSessionFactory.getInstance().getCurrentUserSession(workspace).getNode(nodePath);
             return node.hasPermission(permission);

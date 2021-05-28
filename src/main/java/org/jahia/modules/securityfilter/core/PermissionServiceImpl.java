@@ -8,15 +8,40 @@ import org.slf4j.LoggerFactory;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import javax.servlet.http.HttpServletRequest;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class PermissionServiceImpl implements PermissionService {
     private static final Logger logger = LoggerFactory.getLogger(PermissionService.class);
 
     private AuthorizationConfig authorizationConfig;
     private PermissionsConfig permissionsConfig;
+
+    private Map<String, Collection<String>> contexts = new HashMap<>();
+    private ThreadLocal<Set<ScopeDefinition>> currentScopesLocal = ThreadLocal.withInitial(HashSet::new);
+
+    public Collection<ScopeDefinition> getCurrentScopes() {
+        return Collections.unmodifiableSet(currentScopesLocal.get());
+    }
+
+    public void addScopes(Collection<String> scopes, HttpServletRequest request) {
+        currentScopesLocal.get().addAll(authorizationConfig.getScopes().stream()
+                .filter(scope -> scopes.contains(scope.getScopeName()))
+                .filter(scope -> scope.isValid(request))
+                .collect(Collectors.toSet()));
+    }
+
+    public void initScopes(HttpServletRequest request) {
+        currentScopesLocal.get().addAll(authorizationConfig.getScopes().stream()
+                .filter(scope -> scope.shouldAutoApply(request))
+                .filter(scope -> scope.isValid(request))
+                .collect(Collectors.toSet()));
+    }
+
+    public void resetScopes() {
+        currentScopesLocal.remove();
+    }
 
     @Override
     public boolean hasPermission(String apiToCheck) {
@@ -46,18 +71,23 @@ public class PermissionServiceImpl implements PermissionService {
             throw new IllegalArgumentException("Must pass a valid api query");
         }
 
-        boolean hasPermission = authorizationConfig.hasPermission(query);
+        Collection<ScopeDefinition> currentScopes = getCurrentScopes();
+
+        boolean hasPermission = authorizationConfig.getScopes().stream()
+                    .filter(currentScopes::contains)
+                    .anyMatch(p -> p.isGrantAccess(query));
 
         try {
+            // Legacy permissions check
             hasPermission = hasPermission || permissionsConfig.hasPermission((String) query.get("api"), (JCRNodeWrapper) query.get("node"));
         } catch (RepositoryException e) {
             e.printStackTrace();
         }
 
         if (hasPermission) {
-            logger.debug("Checking api permission '{}' for {}: GRANTED", query);
+            logger.debug("Checking api permission {} : GRANTED", query);
         } else {
-            logger.debug("Checking api permission '{}' for {}: DENIED", query);
+            logger.debug("Checking api permission {} : DENIED", query);
         }
 
         return hasPermission;

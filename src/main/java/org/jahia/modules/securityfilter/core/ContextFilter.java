@@ -1,19 +1,18 @@
 package org.jahia.modules.securityfilter.core;
 
 import org.jahia.bin.filters.AbstractServletFilter;
-import org.jahia.modules.securityfilter.AuthorizationScopesService;
+import org.jahia.modules.securityfilter.PermissionService;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import java.net.URL;
 
 public class ContextFilter extends AbstractServletFilter {
 
-    private AuthorizationScopesService authorizationScopesService;
+    private PermissionService permissionService;
 
-    public void setAuthorizationScopesService(AuthorizationScopesService authorizationScopesService) {
-        this.authorizationScopesService = authorizationScopesService;
+    public void setPermissionService(PermissionService permissionService) {
+        this.permissionService = permissionService;
     }
 
     @Override
@@ -23,23 +22,13 @@ public class ContextFilter extends AbstractServletFilter {
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        authorizationScopesService.addContext("default");
-
         HttpServletRequest httpServletRequest = (HttpServletRequest) request;
-        String origin = httpServletRequest.getHeader("Origin");
-        if (origin == null) {
-            origin = httpServletRequest.getHeader("Referer");
+        try {
+            permissionService.initScopes(httpServletRequest);
+            chain.doFilter(request, response);
+        } finally {
+            permissionService.resetScopes();
         }
-        if (origin != null) {
-            String host = new URL(origin).getHost();
-            if (host.equals(request.getServerName())) {
-                authorizationScopesService.addContext("hosted-context");
-            }
-        }
-
-        chain.doFilter(request, response);
-
-        authorizationScopesService.resetScopes();
     }
 
     @Override

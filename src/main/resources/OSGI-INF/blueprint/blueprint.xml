@@ -11,22 +11,17 @@
         <property name="permissionsConfig" ref="permissionsConfig"/>
     </bean>
 
-    <bean id="authorizationScopesService" class="org.jahia.modules.securityfilter.core.AuthorizationScopesServiceImpl"/>
-
-    <bean id="authorizationConfig" class="org.jahia.modules.securityfilter.core.AuthorizationConfig">
-        <property name="authorizationScopesService" ref="authorizationScopesService"/>
-    </bean>
+    <bean id="authorizationConfig" class="org.jahia.modules.securityfilter.core.AuthorizationConfig"/>
 
     <service interface="org.jahia.bin.filters.AbstractServletFilter">
         <bean class="org.jahia.modules.securityfilter.core.ContextFilter">
             <property name="order" value="-1"/>
-            <property name="authorizationScopesService" ref="authorizationScopesService"/>
+            <property name="permissionService" ref="permissionService"/>
             <property name="urlPatterns" value="/*"/>
         </bean>
     </service>
 
     <service interface="org.jahia.modules.securityfilter.PermissionService" ref="permissionService"/>
-    <service interface="org.jahia.modules.securityfilter.AuthorizationScopesService" ref="authorizationScopesService"/>
 
     <service interface="org.osgi.service.cm.ManagedServiceFactory" ref="authorizationConfig">
         <service-properties>
@@ -67,7 +62,7 @@
     <service interface="org.jahia.bin.filters.AbstractServletFilter">
         <bean class="org.jahia.modules.securityfilter.jwt.JWTFilter">
             <property name="jwtConfig" ref="jwtConfig"/>
-            <property name="authorizationScopesService" ref="authorizationScopesService"/>
+            <property name="permissionService" ref="permissionService"/>
             <property name="urlPatterns" value="/*"/>
         </bean>
     </service>

@@ -1,18 +1,14 @@
 package org.jahia.modules.securityfilter.core;
 
-import org.jahia.modules.securityfilter.core.constraint.CompoundConstraint;
-import org.jahia.modules.securityfilter.core.constraint.UserConstraint;
-import org.jahia.modules.securityfilter.core.grant.CompoundGrant;
+import org.jahia.modules.securityfilter.core.apply.AutoApply;
+import org.jahia.modules.securityfilter.core.constraint.Constraint;
 import org.jahia.modules.securityfilter.core.grant.Grant;
-import org.jahia.services.modulemanager.util.PropertiesList;
-import org.jahia.services.modulemanager.util.PropertiesValues;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 public class ScopeDefinition {
     private static final Logger logger = LoggerFactory.getLogger(ScopeDefinition.class);
@@ -20,29 +16,17 @@ public class ScopeDefinition {
     private String pid;
     private String scopeName;
     private String description;
-    private Set<String> contexts;
+    private Collection<AutoApply> apply;
+    private Collection<Constraint> constraints;
+    private Collection<Grant> grants;
 
-    private UserConstraint userConstraint;
-
-    private Set<Grant> grants = new HashSet<>();
-
-    public ScopeDefinition(String pid, String key, PropertiesValues values) {
+    public ScopeDefinition(String pid, String scopeName, String description, Collection<AutoApply> apply, Collection<Constraint> constraints, Collection<Grant> grants) {
         this.pid = pid;
-        scopeName = key;
-        description = values.getProperty("description");
-        contexts = ParserHelper.buildSet(values, "contexts");
-        userConstraint = CompoundConstraint.build(values.getValues("user"));
-
-        PropertiesList grantsValues = values.getList("grants");
-        int size = grantsValues.getSize();
-        for (int i = 0; i < size; i++) {
-            PropertiesValues grantValues = grantsValues.getValues(i);
-            grants.add(CompoundGrant.build(grantValues));
-        }
-    }
-
-    public boolean isValidForUser() {
-        return userConstraint == null || userConstraint.isValidForUser();
+        this.scopeName = scopeName;
+        this.description = description;
+        this.apply = apply;
+        this.constraints = constraints;
+        this.grants = grants;
     }
 
     public String getPid() {
@@ -57,8 +41,12 @@ public class ScopeDefinition {
         return description;
     }
 
-    public Collection<String> getContexts() {
-        return contexts;
+    public boolean shouldAutoApply(HttpServletRequest request) {
+        return apply.stream().anyMatch(a -> a.shouldApply(request));
+    }
+
+    public boolean isValid(HttpServletRequest request) {
+        return constraints.isEmpty() || constraints.stream().allMatch(c -> c.isValid(request));
     }
 
     public boolean isGrantAccess(Map<String, Object> query) {

@@ -43,14 +43,44 @@
  */
 package org.jahia.modules.securityfilter;
 
+import org.jahia.modules.securityfilter.core.ScopeDefinition;
+
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import javax.servlet.http.HttpServletRequest;
+import java.util.Collection;
 import java.util.Map;
 
 /**
  * Content access check service.
  */
 public interface PermissionService {
+
+    /**
+     * Get the valid scope for the current request
+     * @return list of scopes
+     */
+    Collection<ScopeDefinition> getCurrentScopes();
+
+    /**
+     * Add scopes in the current request
+     *
+     * @param scopes Scope names to add
+     * @param request Current request
+     */
+    void addScopes(Collection<String> scopes, HttpServletRequest request);
+
+    /**
+     * Initialize auto-applied scopes
+     *
+     * @param request Current request
+     */
+    void initScopes(HttpServletRequest request);
+
+    /**
+     * Reset scope at the end of the request
+     */
+    void resetScopes();
 
     /**
      * Checks if the current user has access to the specified API.

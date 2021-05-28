@@ -1,6 +1,7 @@
 - scope: graphql
   description: Can access graphql API
-  contexts: hosted-context
+  auto_apply:
+    - origin: hosted
   grants:
     - api:
         include: graphql
@@ -8,22 +9,25 @@
 
 - scope: graphql-privileged
   description: Can access graphql API (privileged users)
-  contexts: hosted-context
-  user:
-    privileged: true
+  auto_apply:
+    - origin: hosted
+  constraints:
+    - privileged_user: true
   grants:
     - api: graphql
 
 - scope: access-category
   description: Can access category tree
-  contexts: hosted-context
+  apply_on:
+    - origin: hosted
   grants:
     - node:
         nodeType: jnt:category
 
 - scope: site-tree
   description: Can access site tree
-  contexts: hosted-context
+  auto_apply:
+    - origin: hosted
   grants:
     - api: view.json.treeRootItem
       node:
@@ -36,16 +40,17 @@
 
 - scope: html_views
   description: Can access HTML views
-  contexts: hosted-context
+  auto_apply:
+    - origin: hosted
   grants:
     - api: view.html
+      node:
 
 - scope: deploy_modules
   description: Can manage modules deployment
-  user:
-    permission:
-      - name: adminTemplates
-      - path: /
+  constraints:
+    - user_permission: adminTemplates
+      path: /
   grants:
     - api: provisioning
     - api: module_manager

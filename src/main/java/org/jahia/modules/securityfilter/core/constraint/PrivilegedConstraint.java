@@ -11,8 +11,8 @@ public class PrivilegedConstraint extends PermissionConstraint {
         super("/sites", null, "jcr:read_default");
     }
 
-    public static UserConstraint build(PropertiesValues grantValues) {
-        Boolean v = grantValues.getBooleanProperty("privileged");
+    public static Constraint build(PropertiesValues grantValues) {
+        Boolean v = grantValues.getBooleanProperty("privileged_user");
         if (v != null && v) {
             return new PrivilegedConstraint();
         }
