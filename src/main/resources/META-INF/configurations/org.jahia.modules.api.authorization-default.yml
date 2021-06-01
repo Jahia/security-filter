@@ -1,4 +1,4 @@
-- scope: graphql
+graphql:
   description: Can access graphql API
   auto_apply:
     - origin: hosted
@@ -7,7 +7,7 @@
         include: graphql
         exclude: graphql.Query.admin
 
-- scope: graphql-privileged
+graphql_privileged:
   description: Can access graphql API (privileged users)
   auto_apply:
     - origin: hosted
@@ -16,7 +16,7 @@
   grants:
     - api: graphql
 
-- scope: access-category
+access_category:
   description: Can access category tree
   apply_on:
     - origin: hosted
@@ -24,7 +24,7 @@
     - node:
         nodeType: jnt:category
 
-- scope: site-tree
+site_tree:
   description: Can access site tree
   auto_apply:
     - origin: hosted
@@ -38,15 +38,14 @@
         nodeType: jnt:folder, jnt:page, jnt:portlet, jnt:navMenuText
         pathPattern: /sites/.*
 
-- scope: html_views
+html_views:
   description: Can access HTML views
   auto_apply:
     - origin: hosted
   grants:
     - api: view.html
-      node:
 
-- scope: deploy_modules
+deploy_modules:
   description: Can manage modules deployment
   constraints:
     - user_permission: adminTemplates

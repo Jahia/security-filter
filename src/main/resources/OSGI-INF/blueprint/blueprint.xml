@@ -76,4 +76,18 @@
         </service-properties>
     </service>
 
+    <service>
+        <interfaces>
+            <value>org.osgi.service.cm.ConfigurationListener</value>
+            <value>org.apache.felix.fileinstall.ArtifactListener</value>
+            <value>org.apache.felix.fileinstall.ArtifactInstaller</value>
+        </interfaces>
+        <bean class="org.jahia.modules.securityfilter.config.YamlConfigInstaller" init-method="activate">
+            <property name="context" ref="blueprintBundleContext"></property>
+            <property name="configAdmin">
+                <reference interface="org.osgi.service.cm.ConfigurationAdmin"/>
+            </property>
+        </bean>
+    </service>
+
 </blueprint>
