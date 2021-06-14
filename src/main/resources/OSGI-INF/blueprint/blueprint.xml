@@ -31,6 +31,24 @@
         </service-properties>
     </service>
 
+    <!-- CORS -->
+    <bean id="corsFilter" class="org.jahia.modules.securityfilter.cors.CorsFilter">
+        <property name="authorizationConfig" ref="authorizationConfig"/>
+        <property name="urlPatterns" value="/modules/graphql"/>
+        <property name="parameters">
+            <map>
+                <entry key="cors.preflight.maxage" value="3600"/>
+            </map>
+        </property>
+    </bean>
+
+    <service interface="org.jahia.bin.filters.AbstractServletFilter" ref="corsFilter"/>
+    <service interface="org.osgi.service.cm.ManagedService" ref="corsFilter">
+        <service-properties>
+            <entry key="service.pid" value="org.jahia.modules.api.cors"/>
+        </service-properties>
+    </service>
+
     <!-- Legacy -->
     <bean id="permissionsConfig" class="org.jahia.modules.securityfilter.legacy.PermissionsConfig">
         <property name="restrictedAccessPermissionFallbackName" value="addChildNodes_default"/>
@@ -75,19 +93,4 @@
             <entry key="service.vendor" value="Jahia Solutions Group SA"/>
         </service-properties>
     </service>
-
-    <service>
-        <interfaces>
-            <value>org.osgi.service.cm.ConfigurationListener</value>
-            <value>org.apache.felix.fileinstall.ArtifactListener</value>
-            <value>org.apache.felix.fileinstall.ArtifactInstaller</value>
-        </interfaces>
-        <bean class="org.jahia.modules.securityfilter.config.YamlConfigInstaller" init-method="activate">
-            <property name="context" ref="blueprintBundleContext"></property>
-            <property name="configAdmin">
-                <reference interface="org.osgi.service.cm.ConfigurationAdmin"/>
-            </property>
-        </bean>
-    </service>
-
 </blueprint>

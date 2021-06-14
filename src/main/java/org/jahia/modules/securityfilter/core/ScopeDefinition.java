@@ -41,6 +41,18 @@ public class ScopeDefinition {
         return description;
     }
 
+    public Collection<AutoApply> getApply() {
+        return apply;
+    }
+
+    public Collection<Constraint> getConstraints() {
+        return constraints;
+    }
+
+    public Collection<Grant> getGrants() {
+        return grants;
+    }
+
     public boolean shouldAutoApply(HttpServletRequest request) {
         return apply.stream().anyMatch(a -> a.shouldApply(request));
     }

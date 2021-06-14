@@ -23,6 +23,10 @@ public class AutoApplyByOrigin implements AutoApply {
         this.origin = origin;
     }
 
+    public String getOrigin() {
+        return origin;
+    }
+
     @Override
     public boolean shouldApply(HttpServletRequest request) {
         String requestOrigin = request.getHeader("Origin");

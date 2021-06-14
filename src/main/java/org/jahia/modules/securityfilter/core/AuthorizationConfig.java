@@ -39,7 +39,7 @@ public class AuthorizationConfig implements ManagedServiceFactory {
 
     @Override
     public void updated(String pid, Dictionary<String, ?> properties) throws ConfigurationException {
-        PropertiesManager pm = new PropertiesManager(getMap(properties));
+        PropertiesManager pm = new PropertiesManager(ConfigUtil.getMap(properties));
 
         PropertiesValues values = pm.getValues();
         Set<String> keys = values.getKeys();
@@ -53,6 +53,15 @@ public class AuthorizationConfig implements ManagedServiceFactory {
             ScopeDefinition definition = new ScopeDefinition(pid, key, description, apply, constraints, grants);
             scopes.add(definition);
         }
+    }
+
+    public Set<String> getAllOrigins() {
+        return scopes.stream()
+                .flatMap(scope -> scope.getApply().stream()
+                        .filter(AutoApplyByOrigin.class::isInstance)
+                        .map(AutoApplyByOrigin.class::cast)
+                        .map(AutoApplyByOrigin::getOrigin))
+                .collect(Collectors.toSet());
     }
 
     private <T> Collection<T> getList(PropertiesList list, Collection<Function<PropertiesValues, T>> builders) {
@@ -76,17 +85,6 @@ public class AuthorizationConfig implements ManagedServiceFactory {
         return scopes;
     }
 
-    private Map<String, String> getMap(Dictionary<String, ?> d) {
-        Map<String, String> m = new HashMap<>();
-        Enumeration<String> en = d.keys();
-        while (en.hasMoreElements()) {
-            String key = en.nextElement();
-            if (!key.startsWith("felix.") && !key.startsWith("service.")) {
-                m.put(key, d.get(key).toString());
-            }
-        }
-        return m;
-    }
 
     private CompoundGrant buildCompoundGrant(PropertiesValues grantValues) {
         Collection<Grant> grants = grantBuilders.stream()
