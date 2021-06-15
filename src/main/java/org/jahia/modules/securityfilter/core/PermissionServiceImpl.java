@@ -33,10 +33,13 @@ public class PermissionServiceImpl implements PermissionService {
     }
 
     public void initScopes(HttpServletRequest request) {
-        currentScopesLocal.get().addAll(authorizationConfig.getScopes().stream()
+        Set<String> scopeNames = authorizationConfig.getScopes().stream()
                 .filter(scope -> scope.shouldAutoApply(request))
                 .filter(scope -> scope.isValid(request))
-                .collect(Collectors.toSet()));
+                .map(ScopeDefinition::getScopeName)
+                .collect(Collectors.toSet());
+        logger.debug("Auto apply following scopes : {}", scopeNames);
+        addScopes(scopeNames, request);
     }
 
     public void resetScopes() {

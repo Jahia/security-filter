@@ -39,8 +39,9 @@ public class AuthorizationConfig implements ManagedServiceFactory {
 
     @Override
     public void updated(String pid, Dictionary<String, ?> properties) throws ConfigurationException {
-        PropertiesManager pm = new PropertiesManager(ConfigUtil.getMap(properties));
+        deleted(pid);
 
+        PropertiesManager pm = new PropertiesManager(ConfigUtil.getMap(properties));
         PropertiesValues values = pm.getValues();
         Set<String> keys = values.getKeys();
 

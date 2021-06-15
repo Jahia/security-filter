@@ -2,15 +2,6 @@ graphql:
   description: Can access graphql API
   auto_apply:
     - origin: hosted
-  grants:
-    - api:
-        include: graphql
-        exclude: graphql.Query.admin
-
-graphql_privileged:
-  description: Can access graphql API (privileged users)
-  auto_apply:
-    - origin: hosted
   constraints:
     - privileged_user: true
   grants:
@@ -18,7 +9,7 @@ graphql_privileged:
 
 access_category:
   description: Can access category tree
-  apply_on:
+  auto_apply:
     - origin: hosted
   grants:
     - node:
