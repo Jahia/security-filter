@@ -41,15 +41,14 @@
  *     If you are unsure which license is appropriate for your use,
  *     please contact the sales department at sales@jahia.com.
  */
-package org.jahia.modules.securityfilter.impl;
+package org.jahia.modules.securityfilter.legacy;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.jackrabbit.core.security.JahiaPrivilegeRegistry;
 import org.jahia.exceptions.JahiaRuntimeException;
-import org.jahia.modules.securityfilter.PermissionService;
-import org.jahia.modules.securityfilter.impl.Permission.AccessType;
-import org.jahia.modules.securityfilter.jwt.impl.JWTFilter;
-import org.jahia.modules.securityfilter.jwt.impl.TokenVerificationResult;
+import org.jahia.modules.securityfilter.jwt.JWTFilter;
+import org.jahia.modules.securityfilter.jwt.TokenVerificationResult;
+import org.jahia.modules.securityfilter.legacy.Permission.AccessType;
 import org.jahia.services.content.*;
 import org.osgi.service.cm.ManagedServiceFactory;
 import org.slf4j.Logger;
@@ -58,9 +57,7 @@ import org.springframework.beans.factory.InitializingBean;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
-import javax.jcr.Session;
 import javax.jcr.security.Privilege;
-
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -69,7 +66,7 @@ import java.util.regex.Pattern;
  * <p>
  * Bound to org.jahia.modules.api.permissions.cfg
  */
-public class PermissionsConfig implements PermissionService, ManagedServiceFactory, InitializingBean {
+public class PermissionsConfig implements ManagedServiceFactory, InitializingBean {
 
     private static final Logger logger = LoggerFactory.getLogger(PermissionsConfig.class);
 
@@ -281,30 +278,12 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
         logger.info("Security configuration reloaded");
     }
 
-    @Override
-    public boolean hasPermission(String apiToCheck, Node node) throws RepositoryException {
-        if (apiToCheck == null) {
-            throw new IllegalArgumentException("Must pass an  api name");
-        }
-
-        boolean hasPermission = hasPermissionInternal(apiToCheck, (JCRNodeWrapper) node);
-
-        String nodePath = node != null ? node.getPath() : "global";
-        if (hasPermission) {
-            logger.debug("Checking api permission '{}' for {}: GRANTED", apiToCheck, nodePath);
-        } else {
-            logger.debug("Checking api permission '{}' for {}: DENIED", apiToCheck, nodePath);
-        }
-
-        return hasPermission;
-    }
-
-    private boolean hasPermissionInternal(String apiToCheck, JCRNodeWrapper jcrNode) throws RepositoryException {
+    public boolean hasPermission(String apiToCheck, JCRNodeWrapper jcrNode) throws RepositoryException {
         for (Permission permission : permissions) {
             JCRNodeWrapper targetNode = jcrNode != null ? jcrNode : getDefaultTargetNode();
 
-            if (!workspaceMatches(jcrNode, permission) || !apiMatches(apiToCheck, permission)
-                    || !pathMatches(jcrNode, permission) || !nodeTypeMatches(jcrNode, permission)
+            if (!workspaceMatches(targetNode, permission) || !apiMatches(apiToCheck, permission)
+                    || !pathMatches(targetNode, permission) || !nodeTypeMatches(targetNode, permission)
                     || !tokenMatches(permission.getScopes()) || !permissionMatches(permission.getPermission(), targetNode)) {
                 continue;
             }
@@ -318,9 +297,12 @@ public class PermissionsConfig implements PermissionService, ManagedServiceFacto
             } else if (!tokenMatches(permission.getRequiredScopes())) {
                 return false;
             }
+            logger.debug("Permission {} on {} granted by {}", apiToCheck, jcrNode, permission);
             return true;
         }
-        return true;
+
+        logger.debug("Permission {} on {} granted by default", apiToCheck, jcrNode);
+        return false;
     }
 
     private JCRNodeWrapper getDefaultTargetNode() throws RepositoryException {

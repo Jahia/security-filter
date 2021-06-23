@@ -43,16 +43,66 @@
  */
 package org.jahia.modules.securityfilter;
 
+import org.jahia.modules.securityfilter.core.ScopeDefinition;
+
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import javax.servlet.http.HttpServletRequest;
+import java.util.Collection;
+import java.util.Map;
 
 /**
  * Content access check service.
  */
 public interface PermissionService {
+
+    /**
+     * Get the valid scope for the current request
+     * @return list of scopes
+     */
+    Collection<ScopeDefinition> getCurrentScopes();
+
+    /**
+     * Add scopes in the current request
+     *
+     * @param scopes Scope names to add
+     * @param request Current request
+     */
+    void addScopes(Collection<String> scopes, HttpServletRequest request);
+
+    /**
+     * Initialize auto-applied scopes
+     *
+     * @param request Current request
+     */
+    void initScopes(HttpServletRequest request);
+
+    /**
+     * Reset scope at the end of the request
+     */
+    void resetScopes();
+
+    /**
+     * Checks if the current user has access to the specified API.
+     *
+     * @param query the object describing the api call
+     * @return <code>true</code> if the current user is allowed to access the api; <code>false</code> otherwise
+     * @throws RepositoryException in case of an error during permission check
+     */
+    public boolean hasPermission(Map<String, Object> query);
+
+    /**
+     * Checks if the current user has access to the specified API key.
+     * 
+     * @param api the API key to test access
+     * @return <code>true</code> if the current user is allowed to access the api; <code>false</code> otherwise
+     * @throws RepositoryException in case of an error during permission check
+     */
+    public boolean hasPermission(String api) throws RepositoryException;
+
     /**
      * Checks if the current user has access to the specified node using the provided API key (used in configuration rules).
-     * 
+     *
      * @param api the API key to test access
      * @param node the requested JCR node, or null to test the permission globally
      * @return <code>true</code> if the current user is allowed to access the api; <code>false</code> otherwise

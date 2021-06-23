@@ -41,56 +41,28 @@
  *     If you are unsure which license is appropriate for your use,
  *     please contact the sales department at sales@jahia.com.
  */
-package org.jahia.modules.securityfilter.impl;
+package org.jahia.modules.securityfilter.views;
 
-import org.jahia.services.render.RenderContext;
-import org.jahia.services.render.Resource;
-import org.jahia.services.render.filter.AbstractFilter;
-import org.jahia.services.render.filter.RenderChain;
-import org.jahia.services.render.scripting.Script;
+import org.jahia.exceptions.JahiaException;
+
+import javax.servlet.http.HttpServletResponse;
 
 /**
- * Filter that checks permission configuration before rendering a view.
+ * Exception throw in case the resource is blocked due to security configuration
  */
-public class PermissionFilter extends AbstractFilter {
+public class PermissionSecurityAccessDeniedException extends JahiaException {
 
-    private static final String VIEW = "view";
+    private static final long serialVersionUID = -5866655244917541160L;
 
-    private PermissionsConfig permissionsConfig;
-
-    public void setPermissionsConfig(PermissionsConfig permissionsConfig) {
-        this.permissionsConfig = permissionsConfig;
+    PermissionSecurityAccessDeniedException(String api, String nodePath) {
+        super(null,
+                "Access to api [" + api + "] is secured and restricted for resource [" + nodePath + "]",
+                JahiaException.SECURITY_ERROR,
+                JahiaException.WARNING_SEVERITY);
     }
 
     @Override
-    public boolean areConditionsMatched(RenderContext renderContext, Resource resource) {
-        return super.areConditionsMatched(renderContext, resource) || (resource.getModuleParams().get("forcePermissionFilterCheck") != null);
-    }
-
-    public void setApplyOnAjaxRequest(Boolean apply) {
-        if (apply) {
-            addCondition(new AjaxRequestCondition());
-        }
-    }
-
-    @Override
-    public String prepare(RenderContext renderContext, Resource resource, RenderChain chain) throws Exception {
-        // Bypass the check if a specific permission has been defined on the view through the requirePermissions property
-        if (hasViewRequirePermissions(renderContext)) {
-            return null;
-        }
-
-        // Otherwise, check the API permissions rules
-        String api = VIEW + "." + resource.getTemplateType() + "." + resource.getResolvedTemplate();
-        if (!permissionsConfig.hasPermission(api, resource.getNode())) {
-            throw new PermissionSecurityAccessDeniedException(api, resource.getPath());
-        }
-        return null;
-    }
-
-    private boolean hasViewRequirePermissions(RenderContext renderContext) {
-        Script script = (Script) renderContext.getRequest().getAttribute("script");
-        return script != null && (script.getView().getProperties().getProperty("requirePermissions") != null
-                || script.getView().getDefaultProperties().getProperty("requirePermissions") != null);
+    public int getResponseErrorCode() {
+        return HttpServletResponse.SC_NOT_FOUND;
     }
 }

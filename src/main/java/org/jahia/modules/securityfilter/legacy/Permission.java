@@ -41,7 +41,7 @@
  *     If you are unsure which license is appropriate for your use,
  *     please contact the sales department at sales@jahia.com.
  */
-package org.jahia.modules.securityfilter.impl;
+package org.jahia.modules.securityfilter.legacy;
 
 import java.util.Collections;
 import java.util.Set;
@@ -146,5 +146,21 @@ public class Permission {
 
     public void setPriority(int priority) {
         this.priority = priority;
+    }
+
+    @Override
+    public String toString() {
+        return "Permission{" +
+                "access=" + access +
+                ", requiredPermission='" + requiredPermission + '\'' +
+                ", permission='" + permission + '\'' +
+                ", apis=" + apis +
+                ", workspaces=" + workspaces +
+                ", pathPatterns=" + pathPatterns +
+                ", nodeTypes=" + nodeTypes +
+                ", scopes=" + scopes +
+                ", requiredScopes=" + requiredScopes +
+                ", priority=" + priority +
+                '}';
     }
 }

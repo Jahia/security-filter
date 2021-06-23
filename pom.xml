@@ -50,7 +50,7 @@
     <parent>
         <groupId>org.jahia.modules</groupId>
         <artifactId>jahia-modules</artifactId>
-        <version>8.0.0.0</version>
+        <version>8.0.3.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>security-filter</artifactId>
@@ -84,6 +84,8 @@
     <properties>
         <jahia-module-type>system</jahia-module-type>
         <require-capability>osgi.extender;filter:="(osgi.extender=org.jahia.bundles.blueprint.extender.config)"</require-capability>
+        <jahia-module-signature>MCwCFF7aOJZzxgx0OzyKubqkFmR23dFlAhRqKWfjzGEq4JxF6nwEllbOolS7Ug==</jahia-module-signature>
+        <export-package>org.jahia.modules.securityfilter,com.auth0.jwt.interfaces</export-package>
     </properties>
 
     <dependencies>
@@ -98,23 +100,17 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-yaml</artifactId>
+            <version>${jackson.osgi.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.fileinstall</artifactId>
+            <version>${felix.fileinstall.version}</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
-                <extensions>true</extensions>
-                <configuration>
-                    <instructions>
-                        <Import-Package>${jahia.plugin.projectPackageImport},
-                            *</Import-Package>
-                        <Export-Package>org.jahia.modules.securityfilter,com.auth0.jwt.interfaces</Export-Package>
-                        <Jahia-Signature>MCwCFAhHqewLnCosL422KeCilbtlUQN7AhRvz4lRNT3Uhy7tWccKXaFaRVTU1w==</Jahia-Signature>
-                    </instructions>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
 </project>

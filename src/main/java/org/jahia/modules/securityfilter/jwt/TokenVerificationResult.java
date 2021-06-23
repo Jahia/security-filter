@@ -41,28 +41,43 @@
  *     If you are unsure which license is appropriate for your use,
  *     please contact the sales department at sales@jahia.com.
  */
-package org.jahia.modules.securityfilter.impl;
+package org.jahia.modules.securityfilter.jwt;
 
-import org.jahia.exceptions.JahiaException;
+import com.auth0.jwt.interfaces.DecodedJWT;
 
-import javax.servlet.http.HttpServletResponse;
+public class TokenVerificationResult {
 
-/**
- * Exception throw in case the resource is blocked due to security configuration
- */
-public class PermissionSecurityAccessDeniedException extends JahiaException {
-
-    private static final long serialVersionUID = -5866655244917541160L;
-
-    PermissionSecurityAccessDeniedException(String api, String nodePath) {
-        super(null,
-                "Access to api [" + api + "] is secured and restricted for resource [" + nodePath + "]",
-                JahiaException.SECURITY_ERROR,
-                JahiaException.WARNING_SEVERITY);
+    public enum VerificationStatus {
+        VERIFIED,
+        REJECTED,
+        NOT_FOUND
     }
 
-    @Override
-    public int getResponseErrorCode() {
-        return HttpServletResponse.SC_NOT_FOUND;
+    private VerificationStatus verificationStatusCode = VerificationStatus.NOT_FOUND;
+    private String message = "Token not found";
+    private DecodedJWT token = null;
+
+    public VerificationStatus getVerificationStatusCode() {
+        return verificationStatusCode;
+    }
+
+    public void setVerificationStatusCode(VerificationStatus verificationStatusCode) {
+        this.verificationStatusCode = verificationStatusCode;
+    }
+
+    public DecodedJWT getToken() {
+        return token;
+    }
+
+    public void setToken(DecodedJWT token) {
+        this.token = token;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 }

@@ -1,0 +1,46 @@
+graphql:
+  description: Can access graphql API
+  auto_apply:
+    - origin: hosted
+  constraints:
+    - privileged_user: true
+  grants:
+    - api: graphql
+
+access_category:
+  description: Can access category tree
+  auto_apply:
+    - origin: hosted
+  grants:
+    - node:
+        nodeType: jnt:category
+
+site_tree:
+  description: Can access site tree
+  auto_apply:
+    - origin: hosted
+  grants:
+    - api: view.json.treeRootItem
+      node:
+        nodeType: jnt:virtualsite
+        pathPattern: /sites/.*
+    - api: view.json.treeItem, view.json.tree
+      node:
+        nodeType: jnt:folder, jnt:page, jnt:portlet, jnt:navMenuText
+        pathPattern: /sites/.*
+
+html_views:
+  description: Can access HTML views
+  auto_apply:
+    - origin: hosted
+  grants:
+    - api: view.html
+
+deploy_modules:
+  description: Can manage modules deployment
+  constraints:
+    - user_permission: adminTemplates
+      path: /
+  grants:
+    - api: provisioning
+    - api: module_manager
