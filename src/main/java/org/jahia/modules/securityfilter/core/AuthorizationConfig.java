@@ -12,7 +12,6 @@ import org.jahia.modules.securityfilter.core.grant.NodeGrant;
 import org.jahia.services.modulemanager.util.PropertiesList;
 import org.jahia.services.modulemanager.util.PropertiesManager;
 import org.jahia.services.modulemanager.util.PropertiesValues;
-import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedServiceFactory;
 
 import java.util.*;
@@ -24,7 +23,8 @@ public class AuthorizationConfig implements ManagedServiceFactory {
     private final Collection<Function<PropertiesValues, AutoApply>> applyBuilders;
     private final Collection<Function<PropertiesValues, Constraint>> constraintBuilders;
     private final Collection<Function<PropertiesValues, Grant>> grantBuilders;
-    private Collection<ScopeDefinitionImpl> scopes = new ArrayList<>();
+    private Collection<ScopeDefinitionImpl> scopeDefinitions = new ArrayList<>();
+    private Collection<ScopeDefinitionImpl> aggregatedScopes = new ArrayList<>();
 
     public AuthorizationConfig() {
         // Should be configurable/extendable
@@ -39,26 +39,44 @@ public class AuthorizationConfig implements ManagedServiceFactory {
     }
 
     @Override
-    public void updated(String pid, Dictionary<String, ?> properties) throws ConfigurationException {
-        deleted(pid);
+    public void updated(String pid, Dictionary<String, ?> properties) {
+        scopeDefinitions.removeAll(scopeDefinitions.stream().filter(s -> s.getPid().equals(pid)).collect(Collectors.toList()));
 
-        PropertiesManager pm = new PropertiesManager(ConfigUtil.getMap(properties));
-        PropertiesValues values = pm.getValues();
-        Set<String> keys = values.getKeys();
+        if (properties != null) {
+            PropertiesManager pm = new PropertiesManager(ConfigUtil.getMap(properties));
+            PropertiesValues values = pm.getValues();
+            Set<String> keys = values.getKeys();
 
-        for (String key : keys) {
-            PropertiesValues scopeValues = values.getValues(key);
-            String description = scopeValues.getProperty("description");
-            Collection<Constraint> constraints = getList(scopeValues.getList("constraints"), constraintBuilders);
-            Collection<AutoApply> apply = getList(scopeValues.getList("auto_apply"), applyBuilders);
-            Collection<Grant> grants = getList(scopeValues.getList("grants"), Collections.singleton(this::buildCompoundGrant));
-            ScopeDefinitionImpl definition = new ScopeDefinitionImpl(pid, key, description, apply, constraints, grants);
-            scopes.add(definition);
+            for (String key : keys) {
+                PropertiesValues scopeValues = values.getValues(key);
+                String description = scopeValues.getProperty("description");
+                Collection<Constraint> constraints = getList(scopeValues.getList("constraints"), constraintBuilders);
+                Collection<AutoApply> apply = getList(scopeValues.getList("auto_apply"), applyBuilders);
+                Collection<Grant> grants = getList(scopeValues.getList("grants"), Collections.singleton(this::buildCompoundGrant));
+                PropertiesValues metadataValues = scopeValues.getValues("metadata");
+                Map<String, String> metadata = metadataValues.getKeys().stream().collect(Collectors.toMap(s -> s, metadataValues::getProperty));
+                ScopeDefinitionImpl definition = new ScopeDefinitionImpl(pid, key, description, apply, constraints, grants, metadata);
+                scopeDefinitions.add(definition);
+            }
         }
+
+        aggregateScopes();
+    }
+
+    private void aggregateScopes() {
+        aggregatedScopes = scopeDefinitions.stream().collect(Collectors.groupingBy(ScopeDefinitionImpl::getScopeName)).entrySet().stream().map(entry ->
+            new ScopeDefinitionImpl(null, entry.getKey(),
+                    entry.getValue().stream().map(ScopeDefinitionImpl::getDescription).filter(Objects::nonNull).findFirst().orElse(null),
+                    entry.getValue().stream().flatMap(s -> s.getApply().stream()).collect(Collectors.toList()),
+                    entry.getValue().stream().flatMap(s -> s.getConstraints().stream()).collect(Collectors.toList()),
+                    entry.getValue().stream().flatMap(s -> s.getGrants().stream()).collect(Collectors.toList()),
+                    entry.getValue().stream().flatMap(s -> s.getMetadata().entrySet().stream()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
+            )
+        ).collect(Collectors.toList());
     }
 
     public Set<String> getAllOrigins() {
-        return scopes.stream()
+        return scopeDefinitions.stream()
                 .flatMap(scope -> scope.getApply().stream()
                         .filter(AutoApplyByOrigin.class::isInstance)
                         .map(AutoApplyByOrigin.class::cast)
@@ -80,13 +98,12 @@ public class AuthorizationConfig implements ManagedServiceFactory {
 
     @Override
     public void deleted(String pid) {
-        scopes.removeAll(scopes.stream().filter(s -> s.getPid().equals(pid)).collect(Collectors.toList()));
+        updated(pid, null);
     }
 
     public Collection<ScopeDefinitionImpl> getScopes() {
-        return scopes;
+        return aggregatedScopes;
     }
-
 
     private CompoundGrant buildCompoundGrant(PropertiesValues grantValues) {
         Collection<Grant> grants = grantBuilders.stream()

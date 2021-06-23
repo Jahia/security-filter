@@ -1,5 +1,7 @@
 graphql:
   description: Can access graphql API
+  metadata:
+    visible: true
   auto_apply:
     - origin: hosted
   constraints:
@@ -49,6 +51,8 @@ html_views:
 
 deploy_modules:
   description: Can manage modules deployment
+  metadata:
+    visible: true
   constraints:
     - user_permission: adminTemplates
       path: /

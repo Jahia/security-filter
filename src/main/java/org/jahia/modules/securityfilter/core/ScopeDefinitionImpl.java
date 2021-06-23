@@ -20,14 +20,16 @@ public class ScopeDefinitionImpl implements ScopeDefinition {
     private Collection<AutoApply> apply;
     private Collection<Constraint> constraints;
     private Collection<Grant> grants;
+    private Map<String, String> metadata;
 
-    public ScopeDefinitionImpl(String pid, String scopeName, String description, Collection<AutoApply> apply, Collection<Constraint> constraints, Collection<Grant> grants) {
+    public ScopeDefinitionImpl(String pid, String scopeName, String description, Collection<AutoApply> apply, Collection<Constraint> constraints, Collection<Grant> grants, Map<String, String> metadata) {
         this.pid = pid;
         this.scopeName = scopeName;
         this.description = description;
         this.apply = apply;
         this.constraints = constraints;
         this.grants = grants;
+        this.metadata = metadata;
     }
 
     public String getPid() {
@@ -52,6 +54,10 @@ public class ScopeDefinitionImpl implements ScopeDefinition {
 
     public Collection<Grant> getGrants() {
         return grants;
+    }
+
+    public Map<String, String> getMetadata() {
+        return metadata;
     }
 
     public boolean shouldAutoApply(HttpServletRequest request) {
