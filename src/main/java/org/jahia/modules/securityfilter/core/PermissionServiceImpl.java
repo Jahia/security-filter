@@ -1,6 +1,7 @@
 package org.jahia.modules.securityfilter.core;
 
 import org.jahia.modules.securityfilter.PermissionService;
+import org.jahia.modules.securityfilter.ScopeDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,6 +21,10 @@ public class PermissionServiceImpl implements PermissionService {
         return Collections.unmodifiableSet(currentScopesLocal.get());
     }
 
+    public Collection<ScopeDefinition> getAvailableScopes() {
+        return Collections.unmodifiableSet(new HashSet<>(authorizationConfig.getScopes()));
+    }
+
     public void addScopes(Collection<String> scopes, HttpServletRequest request) {
         currentScopesLocal.get().addAll(authorizationConfig.getScopes().stream()
                 .filter(scope -> scopes.contains(scope.getScopeName()))
@@ -31,7 +36,7 @@ public class PermissionServiceImpl implements PermissionService {
         Set<String> scopeNames = authorizationConfig.getScopes().stream()
                 .filter(scope -> scope.shouldAutoApply(request))
                 .filter(scope -> scope.isValid(request))
-                .map(ScopeDefinition::getScopeName)
+                .map(ScopeDefinitionImpl::getScopeName)
                 .collect(Collectors.toSet());
         logger.debug("Auto apply following scopes : {}", scopeNames);
         addScopes(scopeNames, request);

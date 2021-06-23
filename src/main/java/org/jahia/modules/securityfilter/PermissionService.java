@@ -43,7 +43,7 @@
  */
 package org.jahia.modules.securityfilter;
 
-import org.jahia.modules.securityfilter.core.ScopeDefinition;
+import org.jahia.modules.securityfilter.core.ScopeDefinitionImpl;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -55,6 +55,13 @@ import java.util.Map;
  * Content access check service.
  */
 public interface PermissionService {
+
+
+    /**
+     * Get the list of available configured scopes
+     * @return list of scopes
+     */
+    Collection<ScopeDefinition> getAvailableScopes();
 
     /**
      * Get the valid scope for the current request

@@ -1,5 +1,6 @@
 package org.jahia.modules.securityfilter.core;
 
+import org.jahia.modules.securityfilter.ScopeDefinition;
 import org.jahia.modules.securityfilter.core.apply.AutoApply;
 import org.jahia.modules.securityfilter.core.constraint.Constraint;
 import org.jahia.modules.securityfilter.core.grant.Grant;
@@ -10,8 +11,8 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.Collection;
 import java.util.Map;
 
-public class ScopeDefinition {
-    private static final Logger logger = LoggerFactory.getLogger(ScopeDefinition.class);
+public class ScopeDefinitionImpl implements ScopeDefinition {
+    private static final Logger logger = LoggerFactory.getLogger(ScopeDefinitionImpl.class);
 
     private String pid;
     private String scopeName;
@@ -20,7 +21,7 @@ public class ScopeDefinition {
     private Collection<Constraint> constraints;
     private Collection<Grant> grants;
 
-    public ScopeDefinition(String pid, String scopeName, String description, Collection<AutoApply> apply, Collection<Constraint> constraints, Collection<Grant> grants) {
+    public ScopeDefinitionImpl(String pid, String scopeName, String description, Collection<AutoApply> apply, Collection<Constraint> constraints, Collection<Grant> grants) {
         this.pid = pid;
         this.scopeName = scopeName;
         this.description = description;

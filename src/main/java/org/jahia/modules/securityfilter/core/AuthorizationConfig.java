@@ -24,7 +24,7 @@ public class AuthorizationConfig implements ManagedServiceFactory {
     private final Collection<Function<PropertiesValues, AutoApply>> applyBuilders;
     private final Collection<Function<PropertiesValues, Constraint>> constraintBuilders;
     private final Collection<Function<PropertiesValues, Grant>> grantBuilders;
-    private Collection<ScopeDefinition> scopes = new ArrayList<>();
+    private Collection<ScopeDefinitionImpl> scopes = new ArrayList<>();
 
     public AuthorizationConfig() {
         // Should be configurable/extendable
@@ -52,7 +52,7 @@ public class AuthorizationConfig implements ManagedServiceFactory {
             Collection<Constraint> constraints = getList(scopeValues.getList("constraints"), constraintBuilders);
             Collection<AutoApply> apply = getList(scopeValues.getList("auto_apply"), applyBuilders);
             Collection<Grant> grants = getList(scopeValues.getList("grants"), Collections.singleton(this::buildCompoundGrant));
-            ScopeDefinition definition = new ScopeDefinition(pid, key, description, apply, constraints, grants);
+            ScopeDefinitionImpl definition = new ScopeDefinitionImpl(pid, key, description, apply, constraints, grants);
             scopes.add(definition);
         }
     }
@@ -83,7 +83,7 @@ public class AuthorizationConfig implements ManagedServiceFactory {
         scopes.removeAll(scopes.stream().filter(s -> s.getPid().equals(pid)).collect(Collectors.toList()));
     }
 
-    public Collection<ScopeDefinition> getScopes() {
+    public Collection<ScopeDefinitionImpl> getScopes() {
         return scopes;
     }
 
