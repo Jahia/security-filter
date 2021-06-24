@@ -43,7 +43,7 @@ site_tree:
 html_views:
   description: Can access HTML views
   auto_apply:
-    - origin: hosted
+    - always: true
   grants:
     - api: view.html
 
