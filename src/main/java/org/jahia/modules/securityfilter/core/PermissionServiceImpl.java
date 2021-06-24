@@ -1,13 +1,10 @@
 package org.jahia.modules.securityfilter.core;
 
 import org.jahia.modules.securityfilter.PermissionService;
-import org.jahia.modules.securityfilter.legacy.PermissionsConfig;
-import org.jahia.services.content.JCRNodeWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.Node;
-import javax.jcr.RepositoryException;
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -16,9 +13,7 @@ public class PermissionServiceImpl implements PermissionService {
     private static final Logger logger = LoggerFactory.getLogger(PermissionService.class);
 
     private AuthorizationConfig authorizationConfig;
-    private PermissionsConfig permissionsConfig;
 
-    private Map<String, Collection<String>> contexts = new HashMap<>();
     private ThreadLocal<Set<ScopeDefinition>> currentScopesLocal = ThreadLocal.withInitial(HashSet::new);
 
     public Collection<ScopeDefinition> getCurrentScopes() {
@@ -80,13 +75,6 @@ public class PermissionServiceImpl implements PermissionService {
                     .filter(currentScopes::contains)
                     .anyMatch(p -> p.isGrantAccess(query));
 
-        try {
-            // Legacy permissions check
-            hasPermission = hasPermission || permissionsConfig.hasPermission((String) query.get("api"), (JCRNodeWrapper) query.get("node"));
-        } catch (RepositoryException e) {
-            e.printStackTrace();
-        }
-
         if (hasPermission) {
             logger.debug("Checking api permission {} : GRANTED", query);
         } else {
@@ -94,10 +82,6 @@ public class PermissionServiceImpl implements PermissionService {
         }
 
         return hasPermission;
-    }
-
-    public void setPermissionsConfig(PermissionsConfig permissionsConfig) {
-        this.permissionsConfig = permissionsConfig;
     }
 
     public void setAuthorizationConfig(AuthorizationConfig authorizationConfig) {

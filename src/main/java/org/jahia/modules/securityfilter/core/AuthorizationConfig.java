@@ -1,5 +1,6 @@
 package org.jahia.modules.securityfilter.core;
 
+import org.jahia.modules.securityfilter.core.apply.AlwaysAutoApply;
 import org.jahia.modules.securityfilter.core.apply.AutoApply;
 import org.jahia.modules.securityfilter.core.apply.AutoApplyByOrigin;
 import org.jahia.modules.securityfilter.core.constraint.Constraint;
@@ -27,7 +28,7 @@ public class AuthorizationConfig implements ManagedServiceFactory {
 
     public AuthorizationConfig() {
         // Should be configurable/extendable
-        applyBuilders = Arrays.asList(AutoApplyByOrigin::build);
+        applyBuilders = Arrays.asList(AutoApplyByOrigin::build, AlwaysAutoApply::build);
         constraintBuilders = Arrays.asList(PermissionConstraint::build, PrivilegedConstraint::build);
         grantBuilders = Arrays.asList(ApiGrant::build, NodeGrant::build);
     }

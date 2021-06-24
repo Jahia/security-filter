@@ -8,7 +8,6 @@
     <!-- Core -->
     <bean id="permissionService" class="org.jahia.modules.securityfilter.core.PermissionServiceImpl">
         <property name="authorizationConfig" ref="authorizationConfig"/>
-        <property name="permissionsConfig" ref="permissionsConfig"/>
     </bean>
 
     <bean id="authorizationConfig" class="org.jahia.modules.securityfilter.core.AuthorizationConfig"/>

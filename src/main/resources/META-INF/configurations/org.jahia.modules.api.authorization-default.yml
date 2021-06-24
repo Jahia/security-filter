@@ -7,6 +7,17 @@ graphql:
   grants:
     - api: graphql
 
+jcrestapi:
+  description: Can access JCR REST API
+  metadata:
+    visible: true
+  auto_apply:
+    - origin: hosted
+  constraints:
+    - privileged_user: true
+  grants:
+    - api: jcrestapi
+
 access_category:
   description: Can access category tree
   auto_apply:
@@ -32,7 +43,7 @@ site_tree:
 html_views:
   description: Can access HTML views
   auto_apply:
-    - origin: hosted
+    - always: true
   grants:
     - api: view.html
 
