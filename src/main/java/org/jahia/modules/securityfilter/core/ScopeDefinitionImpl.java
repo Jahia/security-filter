@@ -1,5 +1,6 @@
 package org.jahia.modules.securityfilter.core;
 
+import org.jahia.modules.securityfilter.ScopeDefinition;
 import org.jahia.modules.securityfilter.core.apply.AutoApply;
 import org.jahia.modules.securityfilter.core.constraint.Constraint;
 import org.jahia.modules.securityfilter.core.grant.Grant;
@@ -10,8 +11,8 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.Collection;
 import java.util.Map;
 
-public class ScopeDefinition {
-    private static final Logger logger = LoggerFactory.getLogger(ScopeDefinition.class);
+public class ScopeDefinitionImpl implements ScopeDefinition {
+    private static final Logger logger = LoggerFactory.getLogger(ScopeDefinitionImpl.class);
 
     private String pid;
     private String scopeName;
@@ -19,14 +20,16 @@ public class ScopeDefinition {
     private Collection<AutoApply> apply;
     private Collection<Constraint> constraints;
     private Collection<Grant> grants;
+    private Map<String, String> metadata;
 
-    public ScopeDefinition(String pid, String scopeName, String description, Collection<AutoApply> apply, Collection<Constraint> constraints, Collection<Grant> grants) {
+    public ScopeDefinitionImpl(String pid, String scopeName, String description, Collection<AutoApply> apply, Collection<Constraint> constraints, Collection<Grant> grants, Map<String, String> metadata) {
         this.pid = pid;
         this.scopeName = scopeName;
         this.description = description;
         this.apply = apply;
         this.constraints = constraints;
         this.grants = grants;
+        this.metadata = metadata;
     }
 
     public String getPid() {
@@ -51,6 +54,10 @@ public class ScopeDefinition {
 
     public Collection<Grant> getGrants() {
         return grants;
+    }
+
+    public Map<String, String> getMetadata() {
+        return metadata;
     }
 
     public boolean shouldAutoApply(HttpServletRequest request) {
