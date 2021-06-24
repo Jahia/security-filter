@@ -10,7 +10,7 @@ public class AlwaysAutoApply implements AutoApply {
 
     public static AutoApply build(PropertiesValues values) {
         String value = values.getProperty("always");
-        if (value != null) {
+        if (Boolean.parseBoolean(value)) {
             return new AlwaysAutoApply();
         }
 
