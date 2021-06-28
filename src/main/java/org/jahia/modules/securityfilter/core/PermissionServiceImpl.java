@@ -15,10 +15,10 @@ public class PermissionServiceImpl implements PermissionService {
 
     private AuthorizationConfig authorizationConfig;
 
-    private ThreadLocal<Set<ScopeDefinition>> currentScopesLocal = ThreadLocal.withInitial(HashSet::new);
+    private ThreadLocal<Set<ScopeDefinition>> currentScopesLocal = new ThreadLocal<>();
 
     public Collection<ScopeDefinition> getCurrentScopes() {
-        return Collections.unmodifiableSet(currentScopesLocal.get());
+        return currentScopesLocal.get() != null ? Collections.unmodifiableSet(currentScopesLocal.get()) : null;
     }
 
     public Collection<ScopeDefinition> getAvailableScopes() {
@@ -26,6 +26,9 @@ public class PermissionServiceImpl implements PermissionService {
     }
 
     public void addScopes(Collection<String> scopes, HttpServletRequest request) {
+        if (currentScopesLocal.get() == null) {
+            currentScopesLocal.set(new HashSet<>());
+        }
         currentScopesLocal.get().addAll(authorizationConfig.getScopes().stream()
                 .filter(scope -> scopes.contains(scope.getScopeName()))
                 .filter(scope -> scope.isValid(request))
@@ -75,6 +78,11 @@ public class PermissionServiceImpl implements PermissionService {
         }
 
         Collection<ScopeDefinition> currentScopes = getCurrentScopes();
+
+        if (currentScopes == null) {
+            // initScope has not been called, bypass security check
+            return true;
+        }
 
         boolean hasPermission = authorizationConfig.getScopes().stream()
                     .filter(currentScopes::contains)
