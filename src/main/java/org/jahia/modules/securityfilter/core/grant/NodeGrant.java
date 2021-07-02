@@ -8,6 +8,7 @@ import pl.touk.throwing.exception.WrappedException;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -42,6 +43,14 @@ public class NodeGrant implements Grant {
                     ParserHelper.buildSet(nodeValues, "excludedPathPattern").stream().map(Pattern::compile).collect(Collectors.toSet()),
                     ParserHelper.buildSet(nodeValues, "workspace"),
                     nodeValues.getProperty("withPermission"));
+        }
+        if ("none".equals(grantValues.getProperty("node"))) {
+            return new NodeGrant(Collections.emptySet(),
+                    Collections.emptySet(),
+                    Collections.emptySet(),
+                    Collections.singleton(Pattern.compile(".*")),
+                    Collections.emptySet(),
+                    null);
         }
 
         return null;

@@ -8,6 +8,14 @@ graphql:
     - privileged_user: true
   grants:
     - api: graphql
+      node: none
+    - api: graphql
+      node:
+        withPermission: api-access
+    - api: graphql
+      node:
+        pathPattern: /,/sites(/.*)?,/modules(/.*)?,/mounts(/.*)?
+        excludedPathPattern: /sites/[^/]+/users(/.*)?,/sites/[^/]+/groups(/.*)?
 
 jcrestapi:
   description: Can access JCR REST API
@@ -19,6 +27,14 @@ jcrestapi:
     - privileged_user: true
   grants:
     - api: jcrestapi
+      node: none
+    - api: jcrestapi
+      node:
+        withPermission: api-access
+    - api: jcrestapi
+      node:
+        pathPattern: /,/sites(/.*)?,/modules(/.*)?,/mounts(/.*)?
+        excludedPathPattern: /sites/[^/]+/users(/.*)?,/sites/[^/]+/groups(/.*)?
 
 access_category:
   description: Can access category tree
