@@ -6,8 +6,13 @@
     <reference id="settingsBean" interface="org.jahia.api.settings.SettingsBean"/>
 
     <!-- Core -->
-    <bean id="permissionService" class="org.jahia.modules.securityfilter.core.PermissionServiceImpl">
+    <bean id="permissionService" class="org.jahia.modules.securityfilter.core.PermissionServiceImpl" init-method="activate">
+        <property name="context" ref="blueprintBundleContext"/>
         <property name="authorizationConfig" ref="authorizationConfig"/>
+        <property name="settingsBean" ref="settingsBean"/>
+        <property name="artifactInstaller">
+            <reference-list interface="org.apache.felix.fileinstall.ArtifactInstaller"/>
+        </property>
     </bean>
 
     <bean id="authorizationConfig" class="org.jahia.modules.securityfilter.core.AuthorizationConfig"/>
@@ -45,20 +50,6 @@
     <service interface="org.osgi.service.cm.ManagedService" ref="corsFilter">
         <service-properties>
             <entry key="service.pid" value="org.jahia.modules.api.cors"/>
-        </service-properties>
-    </service>
-
-    <!-- Legacy -->
-    <bean id="permissionsConfig" class="org.jahia.modules.securityfilter.legacy.PermissionsConfig">
-        <property name="restrictedAccessPermissionFallbackName" value="addChildNodes_default"/>
-        <property name="restrictedAccessPermissionName" value="api-access"/>
-    </bean>
-
-    <service interface="org.osgi.service.cm.ManagedServiceFactory" ref="permissionsConfig">
-        <service-properties>
-            <entry key="service.pid" value="org.jahia.modules.api.permissions"/>
-            <entry key="service.description" value="JCREST-API configuration service"/>
-            <entry key="service.vendor" value="Jahia Solutions Group SA"/>
         </service-properties>
     </service>
 

@@ -3,8 +3,6 @@ package org.jahia.modules.securityfilter.core.apply;
 import org.jahia.services.modulemanager.util.PropertiesValues;
 
 import javax.servlet.http.HttpServletRequest;
-import java.net.MalformedURLException;
-import java.net.URL;
 
 public class AlwaysAutoApply implements AutoApply {
 
