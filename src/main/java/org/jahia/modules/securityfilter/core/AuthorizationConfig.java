@@ -1,5 +1,6 @@
 package org.jahia.modules.securityfilter.core;
 
+import org.jahia.modules.securityfilter.PermissionService;
 import org.jahia.modules.securityfilter.core.apply.AlwaysAutoApply;
 import org.jahia.modules.securityfilter.core.apply.AutoApply;
 import org.jahia.modules.securityfilter.core.apply.AutoApplyByOrigin;
@@ -13,12 +14,15 @@ import org.jahia.services.modulemanager.util.PropertiesList;
 import org.jahia.services.modulemanager.util.PropertiesManager;
 import org.jahia.services.modulemanager.util.PropertiesValues;
 import org.osgi.service.cm.ManagedServiceFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class AuthorizationConfig implements ManagedServiceFactory {
+    private static final Logger logger = LoggerFactory.getLogger(AuthorizationConfig.class);
 
     private final Collection<Function<PropertiesValues, AutoApply>> applyBuilders;
     private final Collection<Function<PropertiesValues, Constraint>> constraintBuilders;
@@ -70,7 +74,12 @@ public class AuthorizationConfig implements ManagedServiceFactory {
                     entry.getValue().stream().flatMap(s -> s.getApply().stream()).collect(Collectors.toList()),
                     entry.getValue().stream().flatMap(s -> s.getConstraints().stream()).collect(Collectors.toList()),
                     entry.getValue().stream().flatMap(s -> s.getGrants().stream()).collect(Collectors.toList()),
-                    entry.getValue().stream().flatMap(s -> s.getMetadata().entrySet().stream()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
+                    entry.getValue().stream().flatMap(s -> s.getMetadata().entrySet().stream()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (v1,v2) -> {
+                        if (!v1.equals(v2)) {
+                            logger.warn("Different metadata values, using {}, ignoring {}", v1, v2);
+                        }
+                        return v1;
+                    }))
             )
         ).collect(Collectors.toList());
     }
