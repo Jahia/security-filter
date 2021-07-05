@@ -1,0 +1,7 @@
+changelog:
+  sections:
+  - title: "Enhancements"
+    labels: ["new"]
+  - title: "Bugs"
+    labels: ["fix"]
+  
