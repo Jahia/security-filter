@@ -1,16 +1,20 @@
 package org.jahia.modules.securityfilter.core;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
 import org.apache.felix.fileinstall.ArtifactInstaller;
+import org.jahia.api.settings.SettingsBean;
 import org.jahia.modules.securityfilter.PermissionService;
 import org.jahia.modules.securityfilter.ScopeDefinition;
-import org.jahia.api.settings.SettingsBean;
+import org.jahia.modules.securityfilter.legacy.PermissionsConfig;
+import org.jahia.services.content.JCRNodeWrapper;
 import org.osgi.framework.BundleContext;
+import org.osgi.service.cm.ConfigurationException;
+import org.osgi.service.cm.ManagedService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.Node;
+import javax.jcr.RepositoryException;
 import javax.servlet.http.HttpServletRequest;
 import java.io.*;
 import java.net.URL;
@@ -21,14 +25,18 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class PermissionServiceImpl implements PermissionService {
-    private static final Logger logger = LoggerFactory.getLogger(PermissionService.class);
+public class PermissionServiceImpl implements PermissionService, ManagedService {
+    private static final Logger logger = LoggerFactory.getLogger(PermissionServiceImpl.class);
 
     private AuthorizationConfig authorizationConfig;
+    private PermissionsConfig permissionsConfig;
     private ThreadLocal<Set<ScopeDefinition>> currentScopesLocal = new ThreadLocal<>();
     private BundleContext context;
     private SettingsBean settingsBean;
     private boolean supportYaml = false;
+
+    private boolean legacyMode = false;
+    private boolean migrationReporting = false;
 
     public Collection<ScopeDefinition> getCurrentScopes() {
         return currentScopesLocal.get() != null ? Collections.unmodifiableSet(currentScopesLocal.get()) : null;
@@ -38,26 +46,37 @@ public class PermissionServiceImpl implements PermissionService {
         return Collections.unmodifiableSet(new HashSet<>(authorizationConfig.getScopes()));
     }
 
-    public void activate() {
+    @Override
+    public void updated(Dictionary<String, ?> properties) throws ConfigurationException {
+        Map<String, String> m = ConfigUtil.getMap(properties);
+        deployProfileConfig(m.getOrDefault("security.profile", "default"));
+        legacyMode = Boolean.parseBoolean(m.getOrDefault("security.legacyMode", "false"));
+        migrationReporting = Boolean.parseBoolean(m.getOrDefault("security.migrationReporting", "false"));
+    }
+
+    private void deployProfileConfig(String profile) {
         String ext = supportYaml ? "yml" : "cfg";
-        String profile = settingsBean.getString("security.profile", "default");
         URL url = context.getBundle().getResource("META-INF/configuration-profiles/profile-" + profile + "." + ext);
-        try {
-            Path path = Paths.get(settingsBean.getJahiaVarDiskPath(), "karaf", "etc", "org.jahia.modules.api.authorization-default." + ext);
-            try (InputStream input = url.openStream()) {
-                List<String> lines = IOUtils.readLines(input, StandardCharsets.UTF_8);
-                lines.add(0, "# Do not edit - Configuration file provided by module, any change will be lost");
-                try (Writer w = new FileWriter(path.toFile())) {
-                    IOUtils.writeLines(lines, null, w);
+        if (url != null) {
+            try {
+                Path path = Paths.get(settingsBean.getJahiaVarDiskPath(), "karaf", "etc", "org.jahia.modules.api.authorization-default." + ext);
+                try (InputStream input = url.openStream()) {
+                    List<String> lines = IOUtils.readLines(input, StandardCharsets.UTF_8);
+                    lines.add(0, "# Do not edit - Configuration file provided by module, any change will be lost");
+                    try (Writer w = new FileWriter(path.toFile())) {
+                        IOUtils.writeLines(lines, null, w);
+                    }
+                    logger.info("Copied configuration file of module {} into {}", url, path);
                 }
-                logger.info("Copied configuration file of module {} into {}", url, path);
+                Path otherPath = Paths.get(settingsBean.getJahiaVarDiskPath(), "karaf", "etc", "org.jahia.modules.api.authorization-default." + (supportYaml ? "cfg" : "yml"));
+                if (Files.exists(otherPath)) {
+                    Files.delete(otherPath);
+                }
+            } catch (IOException e) {
+                logger.error("unable to copy configuration", e);
             }
-            Path otherPath = Paths.get(settingsBean.getJahiaVarDiskPath(), "karaf", "etc", "org.jahia.modules.api.authorization-default." + (supportYaml ? "cfg" : "yml"));
-            if (Files.exists(otherPath)) {
-                Files.delete(otherPath);
-            }
-        } catch (IOException e) {
-            logger.error("unable to copy configuration", e);
+        } else {
+            logger.error("Invalid security-filter profile : {}", profile);
         }
     }
 
@@ -100,7 +119,7 @@ public class PermissionServiceImpl implements PermissionService {
             throw new IllegalArgumentException("Must pass an api name");
         }
 
-        Map<String, Object> query = new HashMap();
+        Map<String, Object> query = new HashMap<>();
         query.put("api", apiToCheck);
         query.put("node", node);
 
@@ -120,17 +139,38 @@ public class PermissionServiceImpl implements PermissionService {
             return true;
         }
 
-        boolean hasPermission = authorizationConfig.getScopes().stream()
+        boolean hasPermission = false;
+        boolean hasLegacyPermission = false;
+
+        if (!legacyMode || migrationReporting) {
+            hasPermission = authorizationConfig.getScopes().stream()
                     .filter(currentScopes::contains)
                     .anyMatch(p -> p.isGrantAccess(query));
-
-        if (hasPermission) {
-            logger.debug("Checking api permission {} : GRANTED", query);
-        } else {
-            logger.debug("Checking api permission {} : DENIED", query);
+            logger.debug("Checking api permission {} with scopes {} : {}", query, currentScopes.stream().map(ScopeDefinition::getScopeName).collect(Collectors.toList()), debugResult(hasPermission));
         }
 
-        return hasPermission;
+        if (legacyMode || migrationReporting) {
+            try {
+                hasLegacyPermission = permissionsConfig.hasPermission((String) query.get("api"), (JCRNodeWrapper) query.get("node"));
+                logger.debug("Checking legacy api permission {} : {}", query, debugResult(hasLegacyPermission));
+            } catch (RepositoryException e) {
+                logger.error("Error when checking legacy permission", e);
+            }
+        }
+
+        if (migrationReporting && (hasLegacyPermission != hasPermission) && logger.isWarnEnabled()) {
+            logger.warn("Permission check for {} : legacy mode is {}, standard mode is {}. Active scopes are {}", query, debugResult(hasLegacyPermission), debugResult(hasPermission), currentScopes.stream().map(ScopeDefinition::getScopeName).collect(Collectors.toList()));
+        }
+
+        if (!legacyMode) {
+            return hasPermission;
+        } else {
+            return hasLegacyPermission;
+        }
+    }
+
+    private String debugResult(boolean value) {
+        return value ? "GRANTED" : "DENIED";
     }
 
     public void setContext(BundleContext context) {
@@ -145,6 +185,10 @@ public class PermissionServiceImpl implements PermissionService {
          for (ArtifactInstaller installer : installers) {
             supportYaml |= installer.canHandle(new File("config.yml"));
         }
+    }
+
+    public void setPermissionsConfig(PermissionsConfig permissionsConfig) {
+        this.permissionsConfig = permissionsConfig;
     }
 
     public void setAuthorizationConfig(AuthorizationConfig authorizationConfig) {
