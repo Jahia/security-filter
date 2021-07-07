@@ -49,9 +49,15 @@ public class PermissionServiceImpl implements PermissionService, ManagedService 
     @Override
     public void updated(Dictionary<String, ?> properties) throws ConfigurationException {
         Map<String, String> m = ConfigUtil.getMap(properties);
-        deployProfileConfig(m.getOrDefault("security.profile", "default"));
-        legacyMode = Boolean.parseBoolean(m.getOrDefault("security.legacyMode", "false"));
-        migrationReporting = Boolean.parseBoolean(m.getOrDefault("security.migrationReporting", "false"));
+        String profile = m.get("security.profile");
+        if (profile != null) {
+            deployProfileConfig(profile);
+        } else {
+            removeProfile("cfg");
+            removeProfile("yml");
+        }
+        legacyMode = Boolean.parseBoolean(m.get("security.legacyMode"));
+        migrationReporting = Boolean.parseBoolean(m.get("security.migrationReporting"));
     }
 
     private void deployProfileConfig(String profile) {
@@ -68,15 +74,23 @@ public class PermissionServiceImpl implements PermissionService, ManagedService 
                     }
                     logger.info("Copied configuration file of module {} into {}", url, path);
                 }
-                Path otherPath = Paths.get(settingsBean.getJahiaVarDiskPath(), "karaf", "etc", "org.jahia.modules.api.authorization-default." + (supportYaml ? "cfg" : "yml"));
-                if (Files.exists(otherPath)) {
-                    Files.delete(otherPath);
-                }
+                removeProfile(supportYaml ? "cfg" : "yml");
             } catch (IOException e) {
                 logger.error("unable to copy configuration", e);
             }
         } else {
             logger.error("Invalid security-filter profile : {}", profile);
+        }
+    }
+
+    private void removeProfile(final String ext) {
+        try {
+            Path path = Paths.get(settingsBean.getJahiaVarDiskPath(), "karaf", "etc", "org.jahia.modules.api.authorization-default." + ext);
+            if (Files.exists(path)) {
+                Files.delete(path);
+            }
+        } catch (IOException e) {
+            logger.error("unable to remove configuration", e);
         }
     }
 
