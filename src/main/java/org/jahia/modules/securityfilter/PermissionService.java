@@ -43,8 +43,6 @@
  */
 package org.jahia.modules.securityfilter;
 
-import org.jahia.modules.securityfilter.core.ScopeDefinitionImpl;
-
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.servlet.http.HttpServletRequest;

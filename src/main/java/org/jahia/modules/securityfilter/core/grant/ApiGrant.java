@@ -34,8 +34,8 @@ public class ApiGrant implements Grant {
     @Override
     public boolean matches(Map<String, Object> query) {
         String apiToCheck = (String) query.get("api");
-        boolean includeMatch = apiToCheck != null && apis.stream().anyMatch(api -> api.equals(apiToCheck) || apiToCheck.startsWith(api + "."));
-        boolean excludeMatch = apiToCheck == null || excludes.stream().noneMatch(api -> api.equals(apiToCheck) || apiToCheck.startsWith(api + "."));
+        boolean includeMatch = apis.isEmpty() || (apiToCheck != null && apis.stream().anyMatch(api -> api.equals(apiToCheck) || apiToCheck.startsWith(api + ".")));
+        boolean excludeMatch = excludes.isEmpty() || apiToCheck == null || excludes.stream().noneMatch(api -> api.equals(apiToCheck) || apiToCheck.startsWith(api + "."));
         return includeMatch && excludeMatch;
     }
 }
