@@ -1,102 +1,184 @@
 # API Security service and filter
 
-This module provides a service and a render filter which can be fed by different API providers to secure access. A centralized
-configuration file provides rules for APIs associating an operation to a required permission.
+This module protects specific API (graphql/rest/views, and others) from unauthorized usage, potential XSS/CSRF attacks 
+and provide support for CORS requests.
 
-## Permission configuration
+It prevents API from being called from anywhere, first in a generic way through a global CORS filter, then per API configuration
 
-API can be restricted based on permissions by adding `org.jahia.modules.api.permissions-*.cfg` files into `digital-factory-data/karaf/etc`.
-These files contain a list of rules which will be checked for each node potentially returned by the API. Rules coming from all files are merged and sorted. Rules can be based on path, node type and/or workspace. 
+It also allows users to specify reduced scopes when using tokens. They can choose what API can be called with a token.
 
-A permission check is always done on a JCR node, and is associated with an API name. Different API names are provided for 
-json views, the JCRest API module, or the GraphQL API.
+The module provides a service which can be used by different API providers to secure access. 
 
-The first rule that matches defines the permission that will be checked on the node to ensure the user is correctly allowed to use the API on it. 
+A centralized configuration file provides rules defining how the APIs can be called.
 
-A permission rule is defined by a list of entries of the following format :
+## Authorization configuration
 
-```
-permission.<rulename>.<property>=<value>
-```
+The configuration is made up of a list of scopes. Each scope is granting some API access, based on API name, node path or types, 
+or any other criteria that can be used by APIs.
 
-Where `property` will define the kind of access and the matching criteria for this rule. 
+Scopes are granted and associated to a request with an explicit token, or automatic rules. 
+Personal API token or JWT token can hold scopes. For example you can grant a token to get server status, but not to undeploy a module.
+Scopes can be automatically granted based on browser origin : some scopes are granted when called by same origin, or from a trusted origin.
 
-A rule can define at most one of the following properties : `access`, `requiredPermission`, `requiredScope`. `access` can take 2 different values : 
-- `denied` : Forbidden for everybody
-- `restricted` : Only allowed for users who have the `api-access` permission on the node
+They can be restricted to some specific user profiles : some scopes can are available only to administrators, editors or privileged users
 
-The check can be defined more precisely by using `requiredPermission` instead : the value is the name of the permission that will be checked if the rule matches. The user must have this permission to be granted access.
+If the request do not hold any scope granting the requested API, access will be denied.
 
-Instead of a permission, a rule can specify a `requiredScope`. Scope can be granted to a request through tokens passed in `Authorization` header (see Scope and tokens below). The access will be granted if and only if the scope is owned by the request.
+The configuration files are located in `digital-factory-data/karaf/etc`, with the `org.jahia.modules.api.authorization-*.(yml|cfg)` filename pattern.
+Starting from Jahia 8.1.0.0 you can write configuration in yaml format - for older versions, you must use cfg format. 
 
-By default, if none of these parameters are passed, the API is granted - no other rules will be tested, and no permission needs to be checked.
+The following snippet :
 
-Rules can also define matching criterias with the following properties :
-
-A rule can specify any number of matching criteria. Each of these criteria can have a single value or a comma separated list of values.
- - `api` : The names of the API, if the rule should only apply to some entry points
- - `pathPattern` : Regular expressions that will be tested on the node path.
- - `workspace` : `live` or `default`, only request on the specified workspace will match.
- - `nodeType` : Only request on nodes of these type will match.
- - `scope` : Only request claiming that scope will match. 
- - `permission` : Only request with users having this permission will match.
- 
-Note the difference between `requiredPermission`/`requiredScope` and `permission`/`scope` - in the "non-required" case, if the user has the permission/scope, his access will be granted (based on `access`, `requiredPermission`, `requiredScope` values), and no other rule will be checked. 
-But it's not required - if he does not have it, the rule won't match, and so subsequent rules will be checked. 
-In the "required" case, if the rule match, the user must have the permission/scope - no other rule will be checked. 
-
-An optional `priority` property can be also specified - the rules with the lowest value will be executed first. Default priority is 0.
-
-```
-permission.checkFirst.priority=-10
+```yaml
+graphql:
+  description: Can access graphql API
+  metadata:
+    visible: true
+  auto_apply:
+    - origin: hosted
+  grants:
+    - api: graphql
+      node: none
+    - api: graphql
+      node:
+        withPermission: api-access
 ```
 
-A rule with no condition will always match (and thus, should have a very high value for priority so that it is checked last):
-```
-permission.global.access=restricted
-permission.global.priority=99999
-```
-
-Rules can specify a simple path pattern : 
-```
-permission.users.pathPattern=/sites/[^/]+/home/.*
-```
-
-Or a combination of all criterias - if all conditions must match (including the permission), access will be granted
-```    
-permission.digitallPostsInLive.pathPattern=/sites/digitall/.*
-permission.digitallPostsInLive.nodeType=jnt:post,jnt:message
-permission.digitallPostsInLive.workspace=live
-permission.digitallPostsInLive.permission=jcr:write
+will be written this way when using cfg format : 
+```properties
+graphql.description = Can access graphql API
+graphql.metadata.visible = true
+graphql.auto_apply[0].origin = hosted
+graphql.grants[0].api = graphql
+graphql.grants[0].node = none
+graphql.grants[1].api = graphql
+graphql.grants[1].node.withPermission = api-access
 ```
 
-This rule will grant full access for all users claiming one of the scopes scope1, scope2 or scope3
+Examples below are given in yaml format.
+
+### Scope name, description and metadata
+
+Every scope must have a unique name. The description explains what the scope is granting. 
+Metadata can be freely added and used by UI or other services.
+
+### Scope grants
+
+A scope contains a list of grants, one for each API access. 
+
+- `api` : The names of the API (in a comma separated list), if the rule should only apply to some entry points.
+  Different API names are provided by the API services. For example : ajax views (`view.<view-type>`), the JCRest API module (`jcrestapi`), or the GraphQL API (`graphql.<gql-type>.<gql-field>`)
+  
+    ```yaml
+       grants: 
+         - api: graphql.JcrNode, graphql.JcrProperty
+    ```
+
+    You can also define `include` and `exclude` sub entries :
+
+    ```yaml
+       grants:
+         - api:
+             include: graphql
+             exclude: graphql.GqlAdmin, graphql.JcrNode
+    ```
+    
+- `node` : Matches the API calls related to a node. You can specify `node: none` to only match API calls that do *not* return a node. 
+  To match some nodes, you can use the following sub entries :
+    - `pathPattern` / `excludedPathPattern` : Regular expressions that will be tested on the node path.
+    - `workspace` : `live` or `default`, only request on the specified workspace will match.
+    - `nodeType` / `excludedNodeType` : Only request on nodes of these type will match.
+    - `withPermission` : Only request on nodes, where the user has this permission, will match.
+
+    ```yaml
+       grants:
+         - node:
+             pathPattern: /,/sites(/.*)?,/modules(/.*)?,/mounts(/.*)?
+             excludedPathPattern: /sites/[^/]+/users(/.*)?
+    ```
+
+### Auto-apply rules
+
+Scope can be automatically applied to requests based on an origin. It's checked against the `Origin` and `Referer` headers. 
+`hosted` or `same` mean that the rule will match if the request is coming from the same server.
+
+```yaml
+   auto_apply:
+     - origin: hosted
+     - origin: http://www.mysite.com
 ```
-permission.jwtAccess.scope=scope1,scope2,scope3
+
+It's also possible to always apply the scope, whatever the request is. It can be used to have API that will always be granted.
+
+```yaml
+   auto_apply:
+     - always: true
 ```
 
-This rule will require myPermission for all graphql call on /sites/secure
+### User constraints
+
+Some scopes are only usable by specific users. You can set which permission a user should have on a node :
+
+```yaml
+   constraints:
+     - user_permission: manageModules
+       path: /sites
+       workspace: live
 ```
-permission.secure.api=graphql
-permission.secure.pathPattern=/sites/secure/.*
-permission.secure.requiredPermission=myPermission
+
+Or simply restrict the scope to privileged users :
+
+```yaml
+   constraints:
+     - privileged_user: true
 ```
 
-### Permissions in a module
+The scope will be available only to users who fulfill the constraints. It will never be applied for other users.
 
-A module can package a configuration file in META-INF/configurations folder. Since DX version 7.2.2.0, all `cfg` files in this folder are deployed in `karaf/etc` at module startup. This gives the possibility for a module to provide a defaut configuration file that can be edited by the user. The files are never updated nor removed automatically. The file name can contain the name of the module : `org.jahia.modules.api.permissions-<modulename>.cfg`.
+### Configuration profiles 
 
-## Scope and tokens
+The user can choose a pre-defined security profile by setting a value in `org.jahia.modules.api.security.cfg`
+- "default" profile is recommended one
+- "compat" profile is more open and is compatible with the previous security-filter implementation.
+- "open" profile allows every call
 
-A request can be granted a scope through the usage of tokens, passed in the `Authentication: Bearer` header. 
+It's also possible to not use any profile (everything will be denied by default)
 
-Security filter currently only support signed JWT token. Tokens contain a verified list of scopes, along with restriction on its usage. 
+### Legacy mode and migration report
+
+The legacy mode can be used to keep the exact same behaviour as the previous versions. The old `org.jahia.modules.api.permissions-*.cfg` files will be used as before.
+Reporting in the logs can be enabled to check what API call will be denied with the new configuration.
+
+### Configuration in a module
+
+A module can package a configuration file in META-INF/configurations folder. Since DX version 7.2.2.0, all  files in this folder are deployed in `karaf/etc` at module startup.
+
+### Extending existing scope
+
+It's possible to extends an existing scope in another configuration file, in order to add grants or auto-apply rules.
+You just need to redeclare the scope, and the list of grants/rules you want to add :
+
+```yaml
+graphql:
+  auto_apply:
+    - origin: http://www.mytrusted-origin.com
+```
+
+## Personal API token
+
+Personal API token can hold scopes and can be used to make an API call. More documentation can be found at [personal-api-tokens](`https://github.com/Jahia/personal-api-tokens`)
+
+## JWT tokens
+
+A request can be granted a scope through the usage of JWT tokens, passed in the `Authentication: Bearer` header. 
+
+JWT Tokens contain a verified list of scopes, along with restriction on its usage. 
 It's possible to restrict the usage of a token based on the client IP or referer header.
 
 ### Configuration
 
 Tokens can be generated via the tools section "jwtConfiguration" - the user can specify the list of scopes that will be owned by the token, and fill in the optional restrictions. 
-You must customize org.jahia.modules.jwt.token.cfg configuration file before generating any token. 
+You must customize `org.jahia.modules.jwt.token.cfg` configuration file before generating any token. 
 The file contains the following properties :
 
 - `jwt.issuer` : Name of your organization, that will be included in tokens, only for informational purpose
@@ -106,24 +188,10 @@ The file contains the following properties :
 
 ### JWT example
 
-The getaway app is an example of SPA, accessing specific data through GraphQL. The code can be found on github: [getaway-dx-module](https://github.com/Jahia/getaway-dx-module) and [getaway-reactjs-app](https://github.com/Jahia/getaway-reactjs-app). 
+A module can expose a scope, that will be granted with JWT token. 
+In order for the scope to be applied, the client will have to provide a valid token containing the corresponding `scope` claim.
 
-The module first defines different types, that need to be accessible by the react SPA. The [CND file](https://github.com/Jahia/getaway-dx-module/blob/master/src/main/resources/META-INF/definitions.cnd) contains definitions for `gant:destination` , `gant:highlightedLandmarks`
-
-A [configuration file](https://github.com/Jahia/getaway-dx-module/blob/master/src/main/resources/META-INF/configurations/org.jahia.modules.api.permissions-getaway.cfg) will give access
-for nodes with these types and `jmix:image`, when they are in `/sites/getaway/contents` and `/sites/getaway/files`. They will be accessible by the `jcr.nodesByQuery` graphql endpoint 
-for bearers of the scope `getaway` :
-
-```
-permission.getaway.api=graphql.Query.jcr,graphql.JCRQuery.nodesByQuery
-permission.getaway.scope=getaway
-permission.getaway.nodeType=gant:destination, gant:highlightedLandmarks, jmix:image
-permission.getaway.pathPattern=/sites/[^/]+/contents/.*, /sites/[^/]+/files/.*
-```
-
-In order for the rule to apply and grant these access, the client will have to provide a valid token containing the corresponding `scope` claim.
-
-The `jwtConfiguration` tool will be used to generate the token. Scope is `getaway`, and we will add more restrictions on the referer field, so that the token can only be used when being used from a site on `http://localhost` or `http://127.0.0.1` .
+The `jwtConfiguration` tool will be used to generate the token. In this example, scope is `getaway`, and we will add more restrictions on the referer field, so that the token can only be used when being used from a site on `http://localhost` or `http://127.0.0.1` .
 
 Generated token will look like that :
 `eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJodHRwOi8vamFoaWEuY29tIiwic3ViIjoiYXBpIHZlcmlmaWNhdGlvbiIsInJlZmVyZXIiOlsiaHR0cDovLzEyNy4wLjAuMSIsImh0dHA6Ly9sb2NhbGhvc3QiXSwiaXNzIjoiZHgiLCJzY29wZXMiOlsiZ2V0YXdheSJdLCJpYXQiOjE1Mzg0NjU3NjQsImp0aSI6ImJiNjUyYmI2LTVlOGUtNGRmZC1hYjI3LWRlYzY4NWQxZmVmYiJ9.YolJyuSXGlvIN9_hL4eH6D9_oFHKwt005y3vfCuR2ZU`
@@ -152,27 +220,51 @@ The claims `aud` and `iss` are coming from the configuration file. You can also 
 
 Finally, the application will add the token to its `Authentication: Bearer` header, as in [index.js](https://github.com/Jahia/getaway-reactjs-app/blob/master/src/index.js) . 
 
-## Render filter
+## Checking API authorization
+
+### Graphql
+
+Graphql provider use the security-filter service to check every field access. 
+The API name is built from the graphql type and the requested field : `graphql.<gql-type>.<gql-field>`.
+
+When a graphql field returns a JCR node or a list of JCR nodes, it filters the result based on API authorization on these nodes.
+
+### JCRest API 
+
+JCRest API filters all result based on security-filter configuration. API name is `jcrestapi.<query-type>`.
+
+### Views
 
 A render filter catches all ajax calls to `*.json` and `*.html.ajax`. The filter calls the service to check if the request is allowed or not.
 The API name contains the template type and the name of the view itself : `view.<template type>.<view name>`
 
 So for example, the following rule will apply to all requests on the tree.json view :
 
-```
-permission.tree.api=view.json.tree
+```yaml
+ - api: view.json.tree
 ```
 
 The following rule will match all json views on pages :
 
+```yaml
+ - api: view.json
+   node: 
+     nodeType: jnt:page
 ```
-permission.tree.api=view.json
-permission.tree.nodeType=jnt:page
-```
 
-## Module
+### Adding API checks to your API
 
-A default configuration file is provided by this module. On DX 7.2.2+ , the configuration file will be copied automatically to `karaf/etc` 
-once the module is started. An existing file won't be overwritten, and the configuration is never automatically removed.
-On older versions of DX, the configuration file need to be deployed and maintained manually.
+The module exposes an OSGi service implementing `org.jahia.modules.securityfilter.PermissionService`. 
+In order to check an API call, you should call the `hasPermission` method, with a `query` map parameter. 
+The query map contains information that describes your API call, and will be tested against the different `grants` :
 
+- It must at least contain the `api` entry, with a string describing it in a dot-separated fashion : `my-api.type.sub-type`. It is tested by the `ApiGrant` class.
+- It can optionally contains a `node` entry, with a `JCRNodeWrapper` value. This one is tested by the `NodeGrant` class.
+
+Other `Grant` implementations may check other entries.
+
+## CORS Filter
+
+Security-filter module embeds a global CORS filter. It is based on tomcat implementation, and can use all configuration settings described here :
+[CORS Filter](https://tomcat.apache.org/tomcat-9.0-doc/config/filter.html#CORS_Filter). 
+These settings must be set in the `org.jahia.modules.api.security.cfg` file. 
