@@ -137,17 +137,22 @@ The scope will be available only to users who fulfill the constraints. It will n
 
 ### Configuration profiles 
 
-The user can choose a pre-defined security profile by setting a value in `org.jahia.modules.api.security.cfg`
-- "default" profile is recommended one
-- "compat" profile is more open and is compatible with the previous security-filter implementation.
-- "open" profile allows every call
+The user can choose a predefined security profile by setting a value in `security.profile`, in `org.jahia.modules.api.security.cfg` file
 
-It's also possible to not use any profile (everything will be denied by default)
+- "default" profile is recommended one. It will not allow any API call from external origin, and from non-privileged users.
+- "compat" profile is more open and is compatible with the previous security-filter implementation. Most graphql/rest calls are allowed for any user
+- "open" profile allows every call.
+
+It's also possible to not use any profile (everything will be denied by default) - you will have to fully provide your own configuration. Without any configuration Jahia GUI will not be work.
 
 ### Legacy mode and migration report
 
-The legacy mode can be used to keep the exact same behaviour as the previous versions. The old `org.jahia.modules.api.permissions-*.cfg` files will be used as before.
-Reporting in the logs can be enabled to check what API call will be denied with the new configuration.
+The legacy mode can be used to keep the exact same behaviour as the previous version. It can be enabled by setting `security.legacyMode=true` into `org.jahia.modules.api.security.cfg`.
+The old `org.jahia.modules.api.permissions-*.cfg` files will be used as before.
+
+Reporting in the logs can be enabled with `security.migrationReporting=true`, to check what API call that was allowed with legacy mode, will be denied with the new configuration, or the opposite.
+This is useful when migrating, if you were using API calls and you are unsure if they will still pass. 
+Reporting can also be enabled when running in standard mode - it will continue to report when there's a difference between legacy and standard mode.
 
 ### Configuration in a module
 
