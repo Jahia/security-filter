@@ -64,20 +64,18 @@ public class PermissionServiceImpl implements PermissionService, ManagedService 
         String ext = supportYaml ? "yml" : "cfg";
         URL url = context.getBundle().getResource("META-INF/configuration-profiles/profile-" + profile + "." + ext);
         if (url != null) {
-            try {
-                Path path = Paths.get(settingsBean.getJahiaVarDiskPath(), "karaf", "etc", "org.jahia.modules.api.authorization-default." + ext);
-                try (InputStream input = url.openStream()) {
-                    List<String> lines = IOUtils.readLines(input, StandardCharsets.UTF_8);
-                    lines.add(0, "# Do not edit - Configuration file provided by module, any change will be lost");
-                    try (Writer w = new FileWriter(path.toFile())) {
-                        IOUtils.writeLines(lines, null, w);
-                    }
-                    logger.info("Copied configuration file of module {} into {}", url, path);
+            Path path = Paths.get(settingsBean.getJahiaVarDiskPath(), "karaf", "etc", "org.jahia.modules.api.authorization-default." + ext);
+            try (InputStream input = url.openStream()) {
+                List<String> lines = IOUtils.readLines(input, StandardCharsets.UTF_8);
+                lines.add(0, "# Do not edit - Configuration file provided by module, any change will be lost");
+                try (Writer w = new FileWriter(path.toFile())) {
+                    IOUtils.writeLines(lines, null, w);
                 }
-                removeProfile(supportYaml ? "cfg" : "yml");
+                logger.info("Copied configuration file of module {} into {}", url, path);
             } catch (IOException e) {
                 logger.error("unable to copy configuration", e);
             }
+            removeProfile(supportYaml ? "cfg" : "yml");
         } else {
             logger.error("Invalid security-filter profile : {}", profile);
             removeProfile("cfg");

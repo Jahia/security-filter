@@ -16,13 +16,14 @@ A centralized configuration file provides rules defining how the APIs can be cal
 The configuration is made up of a list of scopes. Each scope is granting some API access, based on API name, node path or types, 
 or any other criteria that can be used by APIs.
 
+If an API request holds at least one scope granting the API, access will be granted.
+If it does not hold any scope granting the API, access will be denied.
+
 Scopes are granted and associated to a request with an explicit token, or automatic rules. 
 Personal API token or JWT token can hold scopes. For example you can grant a token to get server status, but not to undeploy a module.
 Scopes can be automatically granted based on browser origin : some scopes are granted when called by same origin, or from a trusted origin.
 
 They can be restricted to some specific user profiles : some scopes are available only to administrators, editors or privileged users
-
-If the request do not hold any scope granting the requested API, access will be denied.
 
 The configuration files are located in `digital-factory-data/karaf/etc`, with the `org.jahia.modules.api.authorization-*.(yml|cfg)` filename pattern.
 Starting from Jahia 8.1.0.0 you can write configuration in yaml format - for older versions, you must use cfg format. 
