@@ -80,6 +80,8 @@ public class PermissionServiceImpl implements PermissionService, ManagedService 
             }
         } else {
             logger.error("Invalid security-filter profile : {}", profile);
+            removeProfile("cfg");
+            removeProfile("yml");
         }
     }
 

@@ -3,7 +3,7 @@
 This module protects specific API (graphql/rest/views, and others) from unauthorized usage, potential XSS/CSRF attacks 
 and provide support for CORS requests.
 
-It prevents API from being called from anywhere, first in a generic way through a global CORS filter, then per API configuration
+It prevents API from being called from anywhere, first in a generic way through a global CORS filter, then per API configuration.
 
 It also allows users to specify reduced scopes when using tokens. They can choose what API can be called with a token.
 
@@ -20,7 +20,7 @@ Scopes are granted and associated to a request with an explicit token, or automa
 Personal API token or JWT token can hold scopes. For example you can grant a token to get server status, but not to undeploy a module.
 Scopes can be automatically granted based on browser origin : some scopes are granted when called by same origin, or from a trusted origin.
 
-They can be restricted to some specific user profiles : some scopes can are available only to administrators, editors or privileged users
+They can be restricted to some specific user profiles : some scopes are available only to administrators, editors or privileged users
 
 If the request do not hold any scope granting the requested API, access will be denied.
 
