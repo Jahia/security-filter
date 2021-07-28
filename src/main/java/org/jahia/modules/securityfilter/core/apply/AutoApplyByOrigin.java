@@ -36,7 +36,7 @@ public class AutoApplyByOrigin implements AutoApply {
         if (requestOrigin != null) {
             try {
                 String host = new URL(requestOrigin).getHost();
-                String originToCheck = origin.equals("hosted") ? request.getServerName() : origin;
+                String originToCheck = (origin.equals("hosted") || origin.equals("same")) ? request.getServerName() : origin;
                 if (host.equals(originToCheck)) {
                     return true;
                 }
