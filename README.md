@@ -83,7 +83,10 @@ A scope contains a list of grants, one for each API access.
              include: graphql
              exclude: graphql.GqlAdmin, graphql.JcrNode
     ```
-    
+  
+  This grant will apply to all graphql API calls, except the ones on GqlAdmin and JcrNode fields. 
+  Access to excluded API can be granted by other scopes or grant entries.
+
 - `node` : Matches the API calls related to a node. You can specify `node: none` to only match API calls that do *not* return a node. 
   To match some nodes, you can use the following sub entries :
     - `pathPattern` / `excludedPathPattern` : Regular expressions that will be tested on the node path.
