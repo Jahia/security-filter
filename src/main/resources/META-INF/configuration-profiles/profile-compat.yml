@@ -77,8 +77,8 @@ api_access_permission:
   constraints:
     - privileged_user: true
   grants:
-    node:
-      - withPermission: api-access
+    - node:
+        withPermission: api-access
 
 deploy_modules:
   description: Can manage modules deployment
