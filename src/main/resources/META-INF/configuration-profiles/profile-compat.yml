@@ -70,6 +70,16 @@ html_views:
   grants:
     - api: view.html
 
+api_access_permission:
+  description: Can access anything with api-access
+  auto_apply:
+    - always: true
+  constraints:
+    - privileged_user: true
+  grants:
+    node:
+      - withPermission: api-access
+
 deploy_modules:
   description: Can manage modules deployment
   metadata:
