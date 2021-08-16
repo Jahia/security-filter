@@ -68,6 +68,11 @@ public interface PermissionService {
     Collection<ScopeDefinition> getCurrentScopes();
 
     /**
+     * Set the scopes for the current thread. Override any previous value
+     */
+    void setCurrentScopes(Collection<ScopeDefinition> scopes);
+
+    /**
      * Add scopes in the current request
      *
      * @param scopes Scope names to add
