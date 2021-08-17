@@ -42,6 +42,10 @@ public class PermissionServiceImpl implements PermissionService, ManagedService 
         return currentScopesLocal.get() != null ? Collections.unmodifiableSet(currentScopesLocal.get()) : null;
     }
 
+    public void setCurrentScopes(Collection<ScopeDefinition> scopes) {
+        currentScopesLocal.set(new HashSet<>(scopes));
+    }
+
     public Collection<ScopeDefinition> getAvailableScopes() {
         return Collections.unmodifiableSet(new HashSet<>(authorizationConfig.getScopes()));
     }
