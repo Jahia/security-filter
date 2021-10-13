@@ -202,10 +202,10 @@ workflows:
           ssh_key_fingerprints:  << pipeline.parameters.SSH_KEY_FINGERPRINT >>
 
   # The manual-run workflow was created to allow the triggering of an integration testing run using CircleCI pipeline API
-  manual-run:
-    when: << pipeline.parameters.IS_MANUAL_TESTRUN >>
-    jobs:
-      - jahia-modules-orb/initialize
+#  manual-run:
+#    when: << pipeline.parameters.IS_MANUAL_TESTRUN >>
+#    jobs:
+#      - jahia-modules-orb/initialize
   #      - jahia-modules-orb/integration-tests:
   #          context: QA_ENVIRONMENT
   #          requires:
@@ -223,16 +223,16 @@ workflows:
   # The objective of nightly runs is to ensure the codebase still passes tests:
   # - With the latest releases version of Jahia
   # - With the current snapshot of Jahia
-  nightly:
-    triggers:
-      - schedule:
-          cron: "0 0 * * *"
-          filters:
-            branches:
-              only:
-                - << pipeline.parameters.PRIMARY_RELEASE_BRANCH >>
-    jobs:
-      - jahia-modules-orb/initialize
+#  nightly:
+#    triggers:
+#      - schedule:
+#          cron: "0 0 * * *"
+#          filters:
+#            branches:
+#              only:
+#                - << pipeline.parameters.PRIMARY_RELEASE_BRANCH >>
+#    jobs:
+#      - jahia-modules-orb/initialize
 #      - jahia-modules-orb/integration-tests:
 #          name: Nightly-<< matrix.jahia_image >>
 #          context: QA_ENVIRONMENT
