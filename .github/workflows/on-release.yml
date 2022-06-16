@@ -35,8 +35,6 @@ jobs:
 
       - uses: jahia/jahia-modules-action/release@v2
         name: Release Module
-        env:
-          NEXUS_INTERNAL_URL: https://devtools.jahia.com/nexus/content/groups/internal/
         with:
           github_slug: Jahia/security-filter
           primary_release_branch: master
@@ -45,7 +43,6 @@ jobs:
           github_api_token: ${{ secrets.GH_API_TOKEN }}
           nexus_username: ${{ secrets.NEXUS_USERNAME }}
           nexus_password: ${{ secrets.NEXUS_PASSWORD }}
-          mvn_settings_filepath: '.github/maven.settings.xml'
 
       - uses: jahia/jahia-modules-action/update-signature@v2
         with:

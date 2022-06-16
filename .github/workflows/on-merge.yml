@@ -26,8 +26,6 @@ jobs:
     name: Build Module
     needs: update-signature
     runs-on: ubuntu-latest
-    env:
-      NEXUS_INTERNAL_URL: https://devtools.jahia.com/nexus/content/groups/internal/
     container:
       image: jahia/cimg-mvn-cache:ga_cimg_openjdk_8.0.312-node
       credentials:
@@ -40,15 +38,12 @@ jobs:
           nexus_username: ${{ secrets.NEXUS_USERNAME }}
           nexus_password: ${{ secrets.NEXUS_PASSWORD }}
           module_id: security-filter
-          mvn_settings_filepath: '.github/maven.settings.xml'
 
   publish:
     name: Publish module
     needs: build
     if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
-    env:
-      NEXUS_INTERNAL_URL: https://devtools.jahia.com/nexus/content/groups/internal/
     container:
       image: jahia/cimg-mvn-cache:ga_cimg_openjdk_8.0.312-node
       credentials:
@@ -60,4 +55,3 @@ jobs:
         with:
           nexus_username: ${{ secrets.NEXUS_USERNAME }}
           nexus_password: ${{ secrets.NEXUS_PASSWORD }}
-          mvn_settings_filepath: '.github/maven.settings.xml'
