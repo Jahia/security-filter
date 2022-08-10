@@ -1,3 +1,5 @@
+*This module has been moved to a core bundle (https://github.com/Jahia/jahia/tree/master/bundles/security-filter) since Jahia 8.1.0*
+
 # API Security service and filter
 
 This module protects specific API (graphql/rest/views, and others) from unauthorized usage, potential XSS/CSRF attacks 
